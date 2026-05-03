@@ -56,6 +56,10 @@ const allowed = window.RajanAuth.allowedEmail();
 if (allowed) {
   const emailInput = document.getElementById('loginEmail');
   emailInput.value = allowed;
+  const hint = document.getElementById('allowedEmailHint');
+  if (hint) {
+    hint.textContent = `Allowed email: ${allowed}`;
+  }
 }
 
 document.getElementById('loginForm').addEventListener('submit', handleLogin);

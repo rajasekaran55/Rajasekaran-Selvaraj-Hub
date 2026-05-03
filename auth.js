@@ -38,14 +38,10 @@
 
   async function loginWithEmail(email, password) {
     const normalized = normalizeEmail(email);
-    if (normalized !== allowedEmail()) {
-      throw new Error('This email is not allowed for this site.');
-    }
-
     const result = await auth.signInWithEmailAndPassword(normalized, password);
     if (!isAllowedUser(result.user)) {
       await auth.signOut();
-      throw new Error('This account is not authorized.');
+      throw new Error(`This account is not authorized. Use ${allowedEmail()}.`);
     }
     return result.user;
   }
@@ -81,9 +77,6 @@
 
   async function sendReset(email) {
     const normalized = normalizeEmail(email);
-    if (normalized !== allowedEmail()) {
-      throw new Error('Use your allowed account email only.');
-    }
     await auth.sendPasswordResetEmail(normalized);
   }
 
