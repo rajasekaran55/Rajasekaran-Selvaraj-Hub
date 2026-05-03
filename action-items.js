@@ -1,0 +1,331 @@
+let db = null;
+let currentUser = null;
+let tabs = [];
+let tasks = [];
+let activeTabId = null;
+let unsubTabs = null;
+let unsubTasks = null;
+
+function setStatus(message, isError) {
+  const el = document.getElementById('actionStatus');
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? '#B71C1C' : '#2E7D32';
+  if (!message) return;
+  setTimeout(() => {
+    if (el.textContent === message) {
+      el.textContent = '';
+    }
+  }, 2200);
+}
+
+function applyThemeToggle() {
+  const themeToggle = document.getElementById('themeToggle');
+  const savedTheme = localStorage.getItem('prTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  if (themeToggle) {
+    themeToggle.textContent = savedTheme === 'dark' ? 'Light' : 'Dark';
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeToggle.textContent = next === 'dark' ? 'Light' : 'Dark';
+      localStorage.setItem('prTheme', next);
+    });
+  }
+}
+
+function tabsRef() {
+  return db.collection('users').doc(currentUser.uid).collection('actionTabs');
+}
+
+function tasksRef(tabId) {
+  return tabsRef().doc(tabId).collection('tasks');
+}
+
+function renderTabs() {
+  const list = document.getElementById('tabList');
+  list.innerHTML = '';
+
+  if (!tabs.length) {
+    list.innerHTML = '<p class="card-sub">No sub tabs yet. Add your first one.</p>';
+    document.getElementById('selectedTabLabel').textContent = 'Selected: -';
+    return;
+  }
+
+  tabs.forEach((tab) => {
+    const item = document.createElement('div');
+    item.className = `subtab-item ${tab.id === activeTabId ? 'active' : ''}`;
+    item.innerHTML = `
+      <button type="button" class="subtab-name" data-select="${tab.id}">${tab.name}</button>
+      <button type="button" class="subtab-delete" data-delete-tab="${tab.id}" aria-label="Delete sub tab">x</button>
+    `;
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll('[data-select]').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-select')));
+  });
+  list.querySelectorAll('[data-delete-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteSubTab(btn.getAttribute('data-delete-tab')));
+  });
+
+  const active = tabs.find((tab) => tab.id === activeTabId);
+  document.getElementById('selectedTabLabel').textContent = active
+    ? `Selected: ${active.name}`
+    : 'Selected: -';
+}
+
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+
+  if (!activeTabId) {
+    list.innerHTML = '<p class="card-sub">Select a sub tab to manage tasks.</p>';
+    return;
+  }
+
+  if (!tasks.length) {
+    list.innerHTML = '<p class="card-sub">No tasks yet in this sub tab.</p>';
+    return;
+  }
+
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.completed === b.completed) {
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    }
+    return a.completed ? 1 : -1;
+  });
+
+  sorted.forEach((task) => {
+    const row = document.createElement('div');
+    row.className = `task-row ${task.completed ? 'done' : ''}`;
+    row.innerHTML = `
+      <label class="task-main">
+        <input type="checkbox" data-toggle-task="${task.id}" ${task.completed ? 'checked' : ''} />
+        <span>${task.title}</span>
+      </label>
+      <button type="button" class="subtab-delete" data-delete-task="${task.id}" aria-label="Delete task">x</button>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-toggle-task]').forEach((cb) => {
+    cb.addEventListener('change', () => toggleTask(cb.getAttribute('data-toggle-task'), cb.checked));
+  });
+
+  list.querySelectorAll('[data-delete-task]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteTask(btn.getAttribute('data-delete-task')));
+  });
+}
+
+function watchTasks(tabId) {
+  if (unsubTasks) unsubTasks();
+  tasks = [];
+  renderTasks();
+
+  if (!tabId) return;
+
+  unsubTasks = tasksRef(tabId).onSnapshot((snapshot) => {
+    tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    renderTasks();
+  }, () => {
+    setStatus('Failed to load tasks for this tab.', true);
+  });
+}
+
+function setActiveTab(tabId) {
+  activeTabId = tabId;
+  localStorage.setItem('actionItemsActiveTab', tabId || '');
+  renderTabs();
+  watchTasks(activeTabId);
+}
+
+async function addSubTab() {
+  const input = document.getElementById('newTabName');
+  const name = input.value.trim();
+  if (!name) {
+    setStatus('Enter a sub tab name.', true);
+    return;
+  }
+
+  try {
+    const created = await tabsRef().add({ name, createdAt: Date.now() });
+    input.value = '';
+    setActiveTab(created.id);
+    setStatus('Sub tab added.', false);
+  } catch (error) {
+    setStatus('Unable to add sub tab.', true);
+  }
+}
+
+async function deleteSubTab(tabId) {
+  if (!tabId) return;
+
+  try {
+    const taskSnapshot = await tasksRef(tabId).get();
+    const batch = db.batch();
+    taskSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    batch.delete(tabsRef().doc(tabId));
+    await batch.commit();
+
+    if (activeTabId === tabId) {
+      activeTabId = null;
+    }
+
+    setStatus('Sub tab deleted.', false);
+  } catch (error) {
+    setStatus('Unable to delete sub tab.', true);
+  }
+}
+
+async function addTask() {
+  if (!activeTabId) {
+    setStatus('Select a sub tab first.', true);
+    return;
+  }
+
+  const input = document.getElementById('newTaskTitle');
+  const title = input.value.trim();
+  if (!title) {
+    setStatus('Enter a task title.', true);
+    return;
+  }
+
+  try {
+    await tasksRef(activeTabId).add({
+      title,
+      completed: false,
+      createdAt: Date.now(),
+    });
+    input.value = '';
+    setStatus('Task added.', false);
+  } catch (error) {
+    setStatus('Unable to add task.', true);
+  }
+}
+
+async function toggleTask(taskId, checked) {
+  if (!activeTabId || !taskId) return;
+
+  try {
+    await tasksRef(activeTabId).doc(taskId).set(
+      { completed: checked, completedAt: checked ? Date.now() : null },
+      { merge: true }
+    );
+  } catch (error) {
+    setStatus('Unable to update task.', true);
+  }
+}
+
+async function deleteTask(taskId) {
+  if (!activeTabId || !taskId) return;
+
+  try {
+    await tasksRef(activeTabId).doc(taskId).delete();
+    setStatus('Task deleted.', false);
+  } catch (error) {
+    setStatus('Unable to delete task.', true);
+  }
+}
+
+async function clearCompleted() {
+  if (!activeTabId) {
+    setStatus('Select a sub tab first.', true);
+    return;
+  }
+
+  try {
+    const snapshot = await tasksRef(activeTabId).where('completed', '==', true).get();
+    if (snapshot.empty) {
+      setStatus('No completed tasks to delete.', false);
+      return;
+    }
+
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    setStatus('Completed tasks deleted.', false);
+  } catch (error) {
+    setStatus('Unable to delete completed tasks.', true);
+  }
+}
+
+function watchTabs() {
+  if (unsubTabs) unsubTabs();
+
+  unsubTabs = tabsRef().onSnapshot((snapshot) => {
+    tabs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    if (!tabs.length) {
+      activeTabId = null;
+      renderTabs();
+      renderTasks();
+      return;
+    }
+
+    const savedActive = localStorage.getItem('actionItemsActiveTab');
+    const existsSaved = tabs.some((tab) => tab.id === savedActive);
+
+    if (!activeTabId) {
+      activeTabId = existsSaved ? savedActive : tabs[0].id;
+    } else if (!tabs.some((tab) => tab.id === activeTabId)) {
+      activeTabId = tabs[0].id;
+    }
+
+    renderTabs();
+    watchTasks(activeTabId);
+  }, () => {
+    setStatus('Failed to load sub tabs.', true);
+  });
+}
+
+async function ensureDefaultTab() {
+  const snapshot = await tabsRef().limit(1).get();
+  if (snapshot.empty) {
+    const created = await tabsRef().add({ name: 'General', createdAt: Date.now() });
+    activeTabId = created.id;
+  }
+}
+
+async function init() {
+  applyThemeToggle();
+
+  await window.RajanAuth.requireAuth();
+  currentUser = await window.RajanAuth.onAuthReady();
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => window.RajanAuth.logout());
+  }
+
+  db = firebase.firestore();
+
+  document.getElementById('addTabBtn').addEventListener('click', addSubTab);
+  document.getElementById('addTaskBtn').addEventListener('click', addTask);
+  document.getElementById('clearCompletedBtn').addEventListener('click', clearCompleted);
+
+  document.getElementById('newTabName').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addSubTab();
+    }
+  });
+
+  document.getElementById('newTaskTitle').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addTask();
+    }
+  });
+
+  try {
+    await ensureDefaultTab();
+    watchTabs();
+  } catch (error) {
+    setStatus('Unable to initialize Action Items.', true);
+  }
+}
+
+init();

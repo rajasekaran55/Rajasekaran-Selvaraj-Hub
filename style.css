@@ -984,6 +984,105 @@ body {
   font-weight: 700;
 }
 
+/* ---- ACTION ITEMS PAGE ---- */
+.action-top-bar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.subtab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.subtab-item {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.subtab-item.active {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px var(--red-light);
+}
+
+.subtab-name {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.subtab-delete {
+  border: none;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-sub);
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.subtab-delete:hover {
+  background: var(--red-light);
+  color: var(--red-dark);
+}
+
+.selected-tab-label {
+  font-size: 0.84rem;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+}
+
+.task-row.done {
+  opacity: 0.7;
+}
+
+.task-row.done .task-main span {
+  text-decoration: line-through;
+}
+
+.task-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.task-main input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
 /* ---- FOOTER ---- */
 .footer {
   background: var(--surface);
@@ -1011,4 +1110,5 @@ a { color: var(--red); }
   .sheet-sync-row { grid-template-columns: 1fr; }
   .sheet-tab { max-width: none; }
   .tab-nav { width: 100%; justify-content: center; flex-wrap: wrap; }
+  .action-top-bar { grid-template-columns: 1fr; }
 }
