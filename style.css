@@ -3,15 +3,15 @@
    ============================================= */
 
 :root {
-  --red:       #D32F2F;
-  --red-light: #FFEBEE;
-  --red-dark:  #B71C1C;
+  --red:       #0A66FF;
+  --red-light: #EAF2FF;
+  --red-dark:  #0A3EA8;
   --green:     #2E7D32;
   --green-light: #E8F5E9;
-  --orange:    #E65100;
-  --orange-light: #FFF3E0;
-  --yellow:    #F57F17;
-  --yellow-light: #FFFDE7;
+  --orange:    #0077B6;
+  --orange-light: #E7F5FF;
+  --yellow:    #0096C7;
+  --yellow-light: #EDF9FF;
   --gray:      #607D8B;
   --gray-light: #ECEFF1;
 
@@ -35,10 +35,10 @@
   --text-sub: #8B949E;
   --shadow:   0 2px 12px rgba(0,0,0,0.4);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
-  --red-light: rgba(211,47,47,0.15);
+  --red-light: rgba(10,102,255,0.18);
   --green-light: rgba(46,125,50,0.15);
-  --orange-light: rgba(230,81,0,0.15);
-  --yellow-light: rgba(245,127,23,0.15);
+  --orange-light: rgba(0,119,182,0.18);
+  --yellow-light: rgba(0,150,199,0.18);
   --gray-light: rgba(96,125,139,0.15);
 }
 
@@ -55,13 +55,13 @@ body {
 
 /* ---- HEADER ---- */
 .header {
-  background: linear-gradient(135deg, #B71C1C 0%, #D32F2F 60%, #C62828 100%);
+  background: linear-gradient(135deg, #022B8A 0%, #0A66FF 55%, #27A7FF 100%);
   color: white;
   padding: 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(183,28,28,0.4);
+  box-shadow: 0 4px 20px rgba(10,102,255,0.35);
 }
 
 .header-inner {
@@ -762,25 +762,59 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: radial-gradient(circle at top right, #ffd9d9, transparent 40%), var(--bg);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(39,167,255,0.28), transparent 35%),
+    radial-gradient(circle at 85% 80%, rgba(10,102,255,0.32), transparent 40%),
+    linear-gradient(140deg, #041738 0%, #082b69 45%, #0a3ea8 100%);
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.45;
+}
+
+.auth-page::after {
+  content: '';
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(39,167,255,0.42), rgba(39,167,255,0));
+  top: -120px;
+  right: -110px;
+  filter: blur(8px);
+  animation: authFloat 7s ease-in-out infinite;
 }
 
 .auth-card {
   width: min(520px, 100%);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+  background: rgba(8, 24, 59, 0.78);
+  border: 1px solid rgba(124, 196, 255, 0.35);
   border-radius: 14px;
   padding: 24px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 18px 50px rgba(2, 10, 32, 0.55);
+  backdrop-filter: blur(8px);
 }
 
 .auth-title {
-  font-size: 1.6rem;
+  font-size: 1.72rem;
+  color: #ffffff;
   margin-bottom: 4px;
+  letter-spacing: 0.4px;
 }
 
 .auth-sub {
-  color: var(--text-sub);
+  color: #cbe3ff;
   margin-bottom: 16px;
   font-size: 0.92rem;
 }
@@ -791,6 +825,7 @@ body {
 
 .auth-section h2 {
   font-size: 1rem;
+  color: #dceeff;
   margin-bottom: 8px;
 }
 
@@ -800,10 +835,44 @@ body {
   gap: 10px;
 }
 
+.auth-card .card-sub {
+  color: #b5d7ff;
+}
+
+.auth-card .sheet-input {
+  background: rgba(7, 20, 48, 0.72);
+  border: 1px solid rgba(124, 196, 255, 0.35);
+  color: #eff7ff;
+}
+
+.auth-card .sheet-input::placeholder {
+  color: rgba(203, 227, 255, 0.78);
+}
+
+.auth-card .sheet-input:focus {
+  border-color: #7ec9ff;
+  box-shadow: 0 0 0 3px rgba(126, 201, 255, 0.22);
+}
+
+.auth-card .btn-primary {
+  background: linear-gradient(135deg, #0a66ff 0%, #27a7ff 100%);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.auth-card .btn-primary:hover {
+  background: linear-gradient(135deg, #0a3ea8 0%, #0a66ff 100%);
+}
+
 .auth-message {
   font-size: 0.88rem;
   font-weight: 600;
   min-height: 22px;
+}
+
+@keyframes authFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(16px); }
+  100% { transform: translateY(0px); }
 }
 
 /* ---- H1B TRACKER ---- */
