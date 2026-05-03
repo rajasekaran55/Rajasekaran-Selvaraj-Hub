@@ -6,6 +6,12 @@ let activeTabId = null;
 let unsubTabs = null;
 let unsubTasks = null;
 
+function priorityRank(priority) {
+  if (priority === 'High') return 3;
+  if (priority === 'Medium') return 2;
+  return 1;
+}
+
 function setStatus(message, isError) {
   const el = document.getElementById('actionStatus');
   if (!el) return;
@@ -89,7 +95,9 @@ function renderTabs() {
 function renderTasks() {
   const list = document.getElementById('taskList');
   const taskFilter = document.getElementById('taskFilter');
+  const taskSort = document.getElementById('taskSort');
   const filterValue = taskFilter ? taskFilter.value : 'all';
+  const sortValue = taskSort ? taskSort.value : 'due-asc';
   list.innerHTML = '';
 
   if (!activeTabId) {
@@ -99,8 +107,11 @@ function renderTasks() {
 
   if (!tasks.length) {
     list.innerHTML = '<p class="card-sub">No tasks yet in this sub tab.</p>';
+    updateTaskStats([]);
     return;
   }
+
+  updateTaskStats(tasks);
 
   const filtered = tasks.filter((task) => {
     if (filterValue === 'pending') return !task.completed;
@@ -116,13 +127,32 @@ function renderTasks() {
   }
 
   const sorted = [...filtered].sort((a, b) => {
-    if (a.completed === b.completed) {
-      const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-      const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-      if (dueA !== dueB) return dueA - dueB;
-      return (b.createdAt || 0) - (a.createdAt || 0);
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1;
     }
-    return a.completed ? 1 : -1;
+
+    const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+    const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+
+    if (sortValue === 'due-desc' && dueA !== dueB) {
+      return dueB - dueA;
+    }
+
+    if (sortValue === 'priority') {
+      const p = priorityRank(b.priority || 'Medium') - priorityRank(a.priority || 'Medium');
+      if (p !== 0) return p;
+    }
+
+    if (sortValue === 'newest') {
+      const c = (b.createdAt || 0) - (a.createdAt || 0);
+      if (c !== 0) return c;
+    }
+
+    if (dueA !== dueB) {
+      return dueA - dueB;
+    }
+
+    return (b.createdAt || 0) - (a.createdAt || 0);
   });
 
   sorted.forEach((task) => {
@@ -161,6 +191,23 @@ function renderTasks() {
   list.querySelectorAll('[data-delete-task]').forEach((btn) => {
     btn.addEventListener('click', () => deleteTask(btn.getAttribute('data-delete-task')));
   });
+}
+
+function updateTaskStats(taskItems) {
+  const stats = document.getElementById('taskStats');
+  if (!stats) return;
+
+  const total = taskItems.length;
+  const pending = taskItems.filter((task) => !task.completed).length;
+  const completed = taskItems.filter((task) => task.completed).length;
+  const overdue = taskItems.filter((task) => isTaskOverdue(task)).length;
+
+  stats.innerHTML = `
+    <span class="stats-chip">Total: ${total}</span>
+    <span class="stats-chip">Pending: ${pending}</span>
+    <span class="stats-chip stats-chip-overdue">Overdue: ${overdue}</span>
+    <span class="stats-chip stats-chip-complete">Completed: ${completed}</span>
+  `;
 }
 
 function watchTasks(tabId) {
@@ -355,6 +402,7 @@ async function init() {
   document.getElementById('addTaskBtn').addEventListener('click', addTask);
   document.getElementById('clearCompletedBtn').addEventListener('click', clearCompleted);
   document.getElementById('taskFilter').addEventListener('change', renderTasks);
+  document.getElementById('taskSort').addEventListener('change', renderTasks);
 
   document.getElementById('newTabName').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
