@@ -3,8 +3,7 @@ let currentUser = null;
 let tabs = [];
 let tasks = [];
 let activeTabId = null;
-let unsubTabs = null;
-let unsubTasks = null;
+const tasksCache = {}; // keyed by tabId; avoids re-reading Firestore on tab switch
 let dragTaskId = null;
 let dragSourceTabId = null;
 
@@ -297,12 +296,15 @@ async function moveTaskToTab(taskId, sourceTabId, targetTabId) {
   if (!taskToMove) return;
 
   try {
-    const targetTasksSnapshot = await tasksRef(targetTabId).get();
-    const targetOrders = targetTasksSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return typeof data.order === 'number' ? data.order : 0;
-    });
-    const nextOrder = targetOrders.length ? Math.max(...targetOrders) + 1 : 1;
+    // Use local cache to determine target order (avoids an extra Firestore read).
+    const targetCache = tasksCache[targetTabId];
+    let nextOrder;
+    if (targetCache) {
+      const targetOrders = targetCache.map((t) => (typeof t.order === 'number' ? t.order : 0));
+      nextOrder = targetOrders.length ? Math.max(...targetOrders) + 1 : 1;
+    } else {
+      nextOrder = Date.now(); // Tab not yet loaded; use large value so task lands at end.
+    }
 
     const payload = {
       ...taskToMove,
@@ -316,6 +318,17 @@ async function moveTaskToTab(taskId, sourceTabId, targetTabId) {
     batch.delete(tasksRef(sourceTabId).doc(taskId));
     await batch.commit();
 
+    // Update local caches.
+    if (tasksCache[sourceTabId]) {
+      tasksCache[sourceTabId] = tasksCache[sourceTabId].filter((t) => t.id !== taskId);
+    }
+    if (targetCache) {
+      targetCache.push({ id: taskId, ...payload });
+    }
+    if (activeTabId === sourceTabId) {
+      tasks = tasksCache[sourceTabId] || [];
+      renderTasks();
+    }
     setStatus('Task moved to selected sub tab.', false);
   } catch (error) {
     setStatus('Unable to move task to another sub tab.', true);
@@ -351,6 +364,16 @@ async function reorderTasks(sourceTaskId, targetTaskId) {
       );
     });
     await batch.commit();
+
+    // Sync order values back into cache.
+    const cache = tasksCache[activeTabId];
+    if (cache) {
+      ordered.forEach((task, index) => {
+        const idx = cache.findIndex((t) => t.id === task.id);
+        if (idx >= 0) cache[idx] = { ...cache[idx], order: index + 1 };
+      });
+      tasks = cache;
+    }
     setStatus('Task order updated.', false);
   } catch (error) {
     setStatus('Unable to save task order.', true);
@@ -374,22 +397,27 @@ function updateTaskStats(taskItems) {
   `;
 }
 
-function watchTasks(tabId) {
-  if (unsubTasks) unsubTasks();
+async function loadTasks(tabId) {
   tasks = [];
   renderTasks();
 
   if (!tabId) return;
 
-  const watchingTabId = tabId;
-  unsubTasks = tasksRef(tabId).onSnapshot((snapshot) => {
-    // Ignore late snapshots from a previously selected tab.
-    if (activeTabId !== watchingTabId) return;
-    tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  // Serve from cache if already loaded for this tab.
+  if (tasksCache[tabId]) {
+    tasks = tasksCache[tabId];
     renderTasks();
-  }, (error) => {
+    return;
+  }
+
+  try {
+    const snapshot = await tasksRef(tabId).get();
+    tasksCache[tabId] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    tasks = tasksCache[tabId];
+    renderTasks();
+  } catch (error) {
     setStatus(errorText('Failed to load tasks for this tab', error), true);
-  });
+  }
 }
 
 function setActiveTab(tabId) {
@@ -402,7 +430,7 @@ function setActiveTab(tabId) {
   }
 
   renderTabs();
-  watchTasks(activeTabId);
+  loadTasks(activeTabId);
 }
 
 async function addSubTab() {
@@ -414,7 +442,10 @@ async function addSubTab() {
   }
 
   try {
-    const created = await tabsRef().add({ name, createdAt: Date.now() });
+    const now = Date.now();
+    const created = await tabsRef().add({ name, createdAt: now });
+    tabs.push({ id: created.id, name, createdAt: now });
+    tasksCache[created.id] = [];
     input.value = '';
     setActiveTab(created.id);
     setStatus('Sub tab added.', false);
@@ -433,10 +464,16 @@ async function deleteSubTab(tabId) {
     batch.delete(tabsRef().doc(tabId));
     await batch.commit();
 
+    tabs = tabs.filter((tab) => tab.id !== tabId);
+    delete tasksCache[tabId];
+
     if (activeTabId === tabId) {
-      activeTabId = null;
+      activeTabId = tabs.length ? tabs[0].id : null;
+      tasks = activeTabId ? (tasksCache[activeTabId] || []) : [];
     }
 
+    renderTabs();
+    renderTasks();
     setStatus('Sub tab deleted.', false);
   } catch (error) {
     setStatus(errorText('Unable to delete sub tab', error), true);
@@ -462,18 +499,24 @@ async function addTask() {
     const nextOrder = tasks.length
       ? Math.max(...tasks.map((task) => (typeof task.order === 'number' ? task.order : 0))) + 1
       : 1;
-
-    await tasksRef(activeTabId).add({
+    const now = Date.now();
+    const taskData = {
       title,
       dueDate: dueInput.value || '',
       priority: priorityInput.value || 'Medium',
       order: nextOrder,
       completed: false,
-      createdAt: Date.now(),
-    });
+      createdAt: now,
+    };
+    const created = await tasksRef(activeTabId).add(taskData);
+    const newTask = { id: created.id, ...taskData };
+    if (!tasksCache[activeTabId]) tasksCache[activeTabId] = [];
+    tasksCache[activeTabId].push(newTask);
+    tasks = tasksCache[activeTabId];
     input.value = '';
     dueInput.value = '';
     priorityInput.value = 'Medium';
+    renderTasks();
     setStatus('Task added.', false);
   } catch (error) {
     setStatus(errorText('Unable to add task', error), true);
@@ -488,6 +531,15 @@ async function toggleTask(taskId, checked) {
       { completed: checked, completedAt: checked ? Date.now() : null },
       { merge: true }
     );
+    const cache = tasksCache[activeTabId];
+    if (cache) {
+      const idx = cache.findIndex((t) => t.id === taskId);
+      if (idx >= 0) {
+        cache[idx] = { ...cache[idx], completed: checked, completedAt: checked ? Date.now() : null };
+      }
+      tasks = cache;
+      renderTasks();
+    }
   } catch (error) {
     setStatus(errorText('Unable to update task', error), true);
   }
@@ -498,6 +550,11 @@ async function deleteTask(taskId) {
 
   try {
     await tasksRef(activeTabId).doc(taskId).delete();
+    if (tasksCache[activeTabId]) {
+      tasksCache[activeTabId] = tasksCache[activeTabId].filter((t) => t.id !== taskId);
+      tasks = tasksCache[activeTabId];
+      renderTasks();
+    }
     setStatus('Task deleted.', false);
   } catch (error) {
     setStatus(errorText('Unable to delete task', error), true);
@@ -511,25 +568,29 @@ async function clearCompleted() {
   }
 
   try {
-    const snapshot = await tasksRef(activeTabId).where('completed', '==', true).get();
-    if (snapshot.empty) {
+    const cache = tasksCache[activeTabId] || [];
+    const completed = cache.filter((t) => t.completed);
+    if (!completed.length) {
       setStatus('No completed tasks to delete.', false);
       return;
     }
 
     const batch = db.batch();
-    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    completed.forEach((t) => batch.delete(tasksRef(activeTabId).doc(t.id)));
     await batch.commit();
+
+    tasksCache[activeTabId] = cache.filter((t) => !t.completed);
+    tasks = tasksCache[activeTabId];
+    renderTasks();
     setStatus('Completed tasks deleted.', false);
   } catch (error) {
     setStatus(errorText('Unable to delete completed tasks', error), true);
   }
 }
 
-function watchTabs() {
-  if (unsubTabs) unsubTabs();
-
-  unsubTabs = tabsRef().onSnapshot((snapshot) => {
+async function loadTabs() {
+  try {
+    const snapshot = await tabsRef().get();
     tabs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     if (!tabs.length) {
@@ -541,18 +602,13 @@ function watchTabs() {
 
     const savedActive = localStorage.getItem('actionItemsActiveTab');
     const existsSaved = tabs.some((tab) => tab.id === savedActive);
-
-    if (!activeTabId) {
-      activeTabId = existsSaved ? savedActive : tabs[0].id;
-    } else if (!tabs.some((tab) => tab.id === activeTabId)) {
-      activeTabId = tabs[0].id;
-    }
+    activeTabId = existsSaved ? savedActive : tabs[0].id;
 
     renderTabs();
-    watchTasks(activeTabId);
-  }, (error) => {
+    await loadTasks(activeTabId);
+  } catch (error) {
     setStatus(errorText('Failed to load sub tabs', error), true);
-  });
+  }
 }
 
 async function ensureDefaultTab() {
@@ -598,7 +654,7 @@ async function init() {
 
   try {
     await ensureDefaultTab();
-    watchTabs();
+    await loadTabs();
   } catch (error) {
     setStatus(errorText('Unable to initialize Action Items', error), true);
   }

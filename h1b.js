@@ -4,7 +4,6 @@ const EDIT_KEY = 'h1bEditId';
 let jobsCache = [];
 let db = null;
 let currentUser = null;
-let unsubscribeJobs = null;
 let cloudMode = false;
 
 const themeToggle = document.getElementById('themeToggle');
@@ -136,6 +135,8 @@ async function deleteJob(id) {
     const ref = getJobsRef();
     if (!ref) return;
     await ref.doc(id).delete();
+    jobsCache = jobsCache.filter((job) => job.id !== id);
+    renderAll();
   } else {
     jobsCache = jobsCache.filter((job) => job.id !== id);
     writeLocalJobs();
@@ -184,6 +185,13 @@ async function saveFromForm(event) {
       const ref = getJobsRef();
       if (!ref) throw new Error('Cloud database not ready');
       await ref.doc(payload.id).set(payload, { merge: true });
+      const index = jobsCache.findIndex((j) => j.id === payload.id);
+      if (index >= 0) {
+        jobsCache[index] = payload;
+      } else {
+        jobsCache.push(payload);
+      }
+      renderAll();
       setFormStatus(editId ? 'Application updated in cloud' : 'Application saved in cloud');
     } else {
       const index = jobsCache.findIndex((j) => j.id === payload.id);
@@ -204,12 +212,12 @@ async function saveFromForm(event) {
   }
 }
 
-function subscribeCloudJobs() {
+async function loadCloudJobs() {
   const ref = getJobsRef();
   if (!ref) return;
 
-  if (unsubscribeJobs) unsubscribeJobs();
-  unsubscribeJobs = ref.onSnapshot((snapshot) => {
+  try {
+    const snapshot = await ref.get();
     jobsCache = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
@@ -225,12 +233,12 @@ function subscribeCloudJobs() {
       };
     });
     renderAll();
-  }, () => {
+  } catch {
     setFormStatus('Cloud sync failed, using local data');
     cloudMode = false;
     readLocalJobs();
     renderAll();
-  });
+  }
 }
 
 async function initAuthAndData() {
@@ -250,7 +258,7 @@ async function initAuthAndData() {
   if (window.firebase && window.firebase.firestore && currentUser) {
     db = window.firebase.firestore();
     cloudMode = true;
-    subscribeCloudJobs();
+    await loadCloudJobs();
     setFormStatus('Cloud sync active');
   } else {
     cloudMode = false;
