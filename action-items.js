@@ -27,6 +27,13 @@ function setStatus(message, isError) {
   }, 2200);
 }
 
+function errorText(prefix, error) {
+  if (!error) return prefix;
+  const code = error.code ? ` (${error.code})` : '';
+  const detail = error.message ? ` ${error.message}` : '';
+  return `${prefix}${code}.${detail}`.trim();
+}
+
 function applyThemeToggle() {
   const themeToggle = document.getElementById('themeToggle');
   const savedTheme = localStorage.getItem('prTheme') || 'light';
@@ -380,8 +387,8 @@ function watchTasks(tabId) {
     if (activeTabId !== watchingTabId) return;
     tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     renderTasks();
-  }, () => {
-    setStatus('Failed to load tasks for this tab.', true);
+  }, (error) => {
+    setStatus(errorText('Failed to load tasks for this tab', error), true);
   });
 }
 
@@ -412,7 +419,7 @@ async function addSubTab() {
     setActiveTab(created.id);
     setStatus('Sub tab added.', false);
   } catch (error) {
-    setStatus('Unable to add sub tab.', true);
+    setStatus(errorText('Unable to add sub tab', error), true);
   }
 }
 
@@ -432,7 +439,7 @@ async function deleteSubTab(tabId) {
 
     setStatus('Sub tab deleted.', false);
   } catch (error) {
-    setStatus('Unable to delete sub tab.', true);
+    setStatus(errorText('Unable to delete sub tab', error), true);
   }
 }
 
@@ -469,7 +476,7 @@ async function addTask() {
     priorityInput.value = 'Medium';
     setStatus('Task added.', false);
   } catch (error) {
-    setStatus('Unable to add task.', true);
+    setStatus(errorText('Unable to add task', error), true);
   }
 }
 
@@ -482,7 +489,7 @@ async function toggleTask(taskId, checked) {
       { merge: true }
     );
   } catch (error) {
-    setStatus('Unable to update task.', true);
+    setStatus(errorText('Unable to update task', error), true);
   }
 }
 
@@ -493,7 +500,7 @@ async function deleteTask(taskId) {
     await tasksRef(activeTabId).doc(taskId).delete();
     setStatus('Task deleted.', false);
   } catch (error) {
-    setStatus('Unable to delete task.', true);
+    setStatus(errorText('Unable to delete task', error), true);
   }
 }
 
@@ -515,7 +522,7 @@ async function clearCompleted() {
     await batch.commit();
     setStatus('Completed tasks deleted.', false);
   } catch (error) {
-    setStatus('Unable to delete completed tasks.', true);
+    setStatus(errorText('Unable to delete completed tasks', error), true);
   }
 }
 
@@ -543,8 +550,8 @@ function watchTabs() {
 
     renderTabs();
     watchTasks(activeTabId);
-  }, () => {
-    setStatus('Failed to load sub tabs.', true);
+  }, (error) => {
+    setStatus(errorText('Failed to load sub tabs', error), true);
   });
 }
 
@@ -593,7 +600,7 @@ async function init() {
     await ensureDefaultTab();
     watchTabs();
   } catch (error) {
-    setStatus('Unable to initialize Action Items.', true);
+    setStatus(errorText('Unable to initialize Action Items', error), true);
   }
 }
 
