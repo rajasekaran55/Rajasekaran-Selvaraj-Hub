@@ -1116,6 +1116,12 @@ body {
   max-width: 240px;
 }
 
+.reorder-hint {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+}
+
 .task-list {
   display: flex;
   flex-direction: column;
@@ -1130,6 +1136,15 @@ body {
   border-radius: 10px;
   padding: 8px 10px;
   background: var(--surface);
+}
+
+.task-row.draggable-row {
+  cursor: move;
+}
+
+.task-row.dragging {
+  opacity: 0.5;
+  border-style: dashed;
 }
 
 .task-row.done {
@@ -1157,6 +1172,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.drag-handle {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  user-select: none;
+  letter-spacing: -1px;
 }
 
 .task-title {

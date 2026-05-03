@@ -73,6 +73,7 @@
           <div class="task-sort-wrap">
             <label class="field-label" for="taskSort">Sort</label>
             <select class="sheet-input task-sort" id="taskSort">
+              <option value="manual">Manual (Drag and Drop)</option>
               <option value="due-asc">Due Date (Earliest)</option>
               <option value="due-desc">Due Date (Latest)</option>
               <option value="priority">Priority (High to Low)</option>
@@ -80,6 +81,7 @@
             </select>
           </div>
         </div>
+        <p id="reorderHint" class="reorder-hint"></p>
         <div id="taskList" class="task-list"></div>
         <p class="save-status" id="actionStatus"></p>
       </div>

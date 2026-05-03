@@ -5,6 +5,7 @@ let tasks = [];
 let activeTabId = null;
 let unsubTabs = null;
 let unsubTasks = null;
+let dragTaskId = null;
 
 function priorityRank(priority) {
   if (priority === 'High') return 3;
@@ -96,9 +97,17 @@ function renderTasks() {
   const list = document.getElementById('taskList');
   const taskFilter = document.getElementById('taskFilter');
   const taskSort = document.getElementById('taskSort');
+  const reorderHint = document.getElementById('reorderHint');
   const filterValue = taskFilter ? taskFilter.value : 'all';
-  const sortValue = taskSort ? taskSort.value : 'due-asc';
+  const sortValue = taskSort ? taskSort.value : 'manual';
+  const allowReorder = sortValue === 'manual' && filterValue === 'all';
   list.innerHTML = '';
+
+  if (reorderHint) {
+    reorderHint.textContent = allowReorder
+      ? 'Drag tasks to reorder. Order is saved automatically.'
+      : 'Drag reorder is available only in Manual sort with All filter.';
+  }
 
   if (!activeTabId) {
     list.innerHTML = '<p class="card-sub">Select a sub tab to manage tasks.</p>';
@@ -129,6 +138,12 @@ function renderTasks() {
   const sorted = [...filtered].sort((a, b) => {
     if (a.completed !== b.completed) {
       return a.completed ? 1 : -1;
+    }
+
+    if (sortValue === 'manual') {
+      const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
     }
 
     const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
@@ -168,9 +183,13 @@ function renderTasks() {
 
     const row = document.createElement('div');
     row.className = `task-row ${task.completed ? 'done' : ''} ${overdue ? 'overdue' : ''}`;
+    row.setAttribute('data-task-id', task.id);
+    row.setAttribute('draggable', allowReorder ? 'true' : 'false');
+    if (allowReorder) row.classList.add('draggable-row');
     row.innerHTML = `
       <label class="task-main">
         <span class="task-checkline">
+          <span class="drag-handle" title="Drag to reorder">::</span>
           <input type="checkbox" data-toggle-task="${task.id}" ${task.completed ? 'checked' : ''} />
           <span class="task-title">${task.title}</span>
         </span>
@@ -191,6 +210,76 @@ function renderTasks() {
   list.querySelectorAll('[data-delete-task]').forEach((btn) => {
     btn.addEventListener('click', () => deleteTask(btn.getAttribute('data-delete-task')));
   });
+
+  if (allowReorder) {
+    list.querySelectorAll('.draggable-row').forEach((row) => {
+      row.addEventListener('dragstart', onTaskDragStart);
+      row.addEventListener('dragover', onTaskDragOver);
+      row.addEventListener('drop', onTaskDrop);
+      row.addEventListener('dragend', onTaskDragEnd);
+    });
+  }
+}
+
+function onTaskDragStart(event) {
+  const row = event.currentTarget;
+  dragTaskId = row.getAttribute('data-task-id');
+  row.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function onTaskDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+}
+
+async function onTaskDrop(event) {
+  event.preventDefault();
+  const targetRow = event.currentTarget;
+  const targetTaskId = targetRow.getAttribute('data-task-id');
+
+  if (!dragTaskId || !targetTaskId || dragTaskId === targetTaskId) return;
+  await reorderTasks(dragTaskId, targetTaskId);
+}
+
+function onTaskDragEnd(event) {
+  event.currentTarget.classList.remove('dragging');
+  dragTaskId = null;
+}
+
+async function reorderTasks(sourceTaskId, targetTaskId) {
+  if (!activeTabId) return;
+
+  const ordered = [...tasks]
+    .sort((a, b) => {
+      const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      if (orderA !== orderB) return orderA - orderB;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+
+  const from = ordered.findIndex((task) => task.id === sourceTaskId);
+  const to = ordered.findIndex((task) => task.id === targetTaskId);
+  if (from < 0 || to < 0) return;
+
+  const [moved] = ordered.splice(from, 1);
+  ordered.splice(to, 0, moved);
+
+  try {
+    const batch = db.batch();
+    ordered.forEach((task, index) => {
+      batch.set(
+        tasksRef(activeTabId).doc(task.id),
+        { order: index + 1 },
+        { merge: true }
+      );
+    });
+    await batch.commit();
+    setStatus('Task order updated.', false);
+  } catch (error) {
+    setStatus('Unable to save task order.', true);
+  }
 }
 
 function updateTaskStats(taskItems) {
@@ -286,10 +375,15 @@ async function addTask() {
   }
 
   try {
+    const nextOrder = tasks.length
+      ? Math.max(...tasks.map((task) => (typeof task.order === 'number' ? task.order : 0))) + 1
+      : 1;
+
     await tasksRef(activeTabId).add({
       title,
       dueDate: dueInput.value || '',
       priority: priorityInput.value || 'Medium',
+      order: nextOrder,
       completed: false,
       createdAt: Date.now(),
     });
