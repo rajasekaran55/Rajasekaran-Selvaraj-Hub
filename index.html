@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rajasekaran — Canada PR Tracker</title>
+  <title>Rajan's Hub</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -16,11 +16,12 @@
       <div class="header-left">
         <div class="maple-icon">🍁</div>
         <div>
-          <h1>Rajasekaran Selvaraj</h1>
-          <p class="header-sub">Canada Permanent Residence Tracker — 2026</p>
+          <h1 id="profileName">Rajan's Hub</h1>
+          <p class="header-sub" id="profileSubtitle">My personal space — work, life, and Canada PR journey, all in one place.</p>
         </div>
       </div>
       <div class="header-right">
+        <a class="top-link" href="h1b.html">H1B Tracker</a>
         <div class="crs-badge">
           <span class="crs-label">CRS Score</span>
           <span class="crs-value" id="crsDisplay">409</span>
@@ -31,6 +32,21 @@
   </header>
 
   <main class="container">
+
+    <!-- LIVE DATA SYNC -->
+    <section class="section">
+      <h2 class="section-title">Cloud Data Sync (Google Sheets)</h2>
+      <div class="card">
+        <p class="card-sub">Connect a published Google Sheet to auto-load your latest values every time this page opens.</p>
+        <div class="sheet-sync-row">
+          <input id="sheetUrlInput" class="sheet-input" type="url" placeholder="Paste Google Sheet link here" />
+          <input id="sheetTabInput" class="sheet-input sheet-tab" type="text" placeholder="Tab name (default: Config)" />
+          <button class="btn btn-primary" id="connectSheetBtn" type="button">Connect Sheet</button>
+          <button class="btn" id="clearSheetBtn" type="button">Disconnect</button>
+        </div>
+        <p class="sheet-status" id="sheetStatus">Not connected. Your local values are being used.</p>
+      </div>
+    </section>
 
     <!-- COUNTDOWN CARDS -->
     <section class="section">
@@ -74,7 +90,7 @@
                 id="scoreArc"/>
             </svg>
             <div class="score-center">
-              <div class="score-number">409</div>
+              <div class="score-number" id="scoreNumber">409</div>
               <div class="score-label">/ 1200</div>
             </div>
           </div>
@@ -451,7 +467,7 @@
   </main>
 
   <footer class="footer">
-    <p>Canada PR Tracker — Rajasekaran Selvaraj &nbsp;|&nbsp; Updated May 2026 &nbsp;|&nbsp; For personal use only</p>
+    <p id="footerLine">Rajan's Hub &nbsp;|&nbsp; Updated May 2026 &nbsp;|&nbsp; For personal use only</p>
     <p class="footer-sub">Data stored locally in your browser. No server. No account required.</p>
   </footer>
 

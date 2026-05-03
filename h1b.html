@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H1B Job Tracker - Rajan's Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="maple-icon">Briefcase</div>
+        <div>
+          <h1>H1B Job Tracker</h1>
+          <p class="header-sub">Track applications, interviews, and reminders in one place.</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <a class="top-link" href="index.html">Home</a>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <h2 class="section-title">Add Job Application</h2>
+      <div class="card">
+        <form id="jobForm" class="job-form">
+          <div class="job-grid">
+            <div>
+              <label class="field-label" for="company">Company</label>
+              <input class="sheet-input" id="company" required />
+            </div>
+            <div>
+              <label class="field-label" for="role">Role</label>
+              <input class="sheet-input" id="role" required />
+            </div>
+            <div>
+              <label class="field-label" for="jobLink">Job Link</label>
+              <input class="sheet-input" id="jobLink" type="url" placeholder="https://..." />
+            </div>
+            <div>
+              <label class="field-label" for="appliedDate">Applied Date</label>
+              <input class="sheet-input" id="appliedDate" type="date" required />
+            </div>
+            <div>
+              <label class="field-label" for="status">Status</label>
+              <select class="sheet-input" id="status">
+                <option>Applied</option>
+                <option>Recruiter Call</option>
+                <option>Interview Round 1</option>
+                <option>Interview Round 2</option>
+                <option>Final Interview</option>
+                <option>Offer</option>
+                <option>Rejected</option>
+                <option>On Hold</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label" for="reminderDate">Reminder Date</label>
+              <input class="sheet-input" id="reminderDate" type="date" />
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="notes">Notes</label>
+            <textarea class="notes-area" id="notes" placeholder="Recruiter name, interview details, follow-up plan"></textarea>
+          </div>
+          <div class="notes-actions">
+            <button class="btn btn-primary" type="submit">Save Application</button>
+            <button class="btn" id="resetForm" type="button">Clear</button>
+            <span class="save-status" id="formStatus"></span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Upcoming Reminders</h2>
+      <div class="card">
+        <div id="remindersWrap" class="reminder-wrap"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Applications</h2>
+      <div class="card">
+        <div class="table-tools">
+          <select id="statusFilter" class="sheet-input sheet-tab">
+            <option value="All">All Statuses</option>
+            <option value="Applied">Applied</option>
+            <option value="Recruiter Call">Recruiter Call</option>
+            <option value="Interview Round 1">Interview Round 1</option>
+            <option value="Interview Round 2">Interview Round 2</option>
+            <option value="Final Interview">Final Interview</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+        </div>
+        <div class="table-wrapper">
+          <table class="pnp-table" id="jobsTable">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Applied</th>
+                <th>Status</th>
+                <th>Reminder</th>
+                <th>Link</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="jobsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Rajan's Hub - H1B Tracker</p>
+    <p class="footer-sub">Stored in your browser. Private to your device.</p>
+  </footer>
+
+  <script src="h1b.js"></script>
+</body>
+</html>
