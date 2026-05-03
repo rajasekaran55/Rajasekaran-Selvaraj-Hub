@@ -1016,6 +1016,12 @@ body {
   box-shadow: 0 0 0 2px var(--red-light);
 }
 
+.subtab-item.drag-over {
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.18);
+  background: #e8f5e9;
+}
+
 .subtab-name {
   border: none;
   background: transparent;

@@ -6,6 +6,7 @@ let activeTabId = null;
 let unsubTabs = null;
 let unsubTasks = null;
 let dragTaskId = null;
+let dragSourceTabId = null;
 
 function priorityRank(priority) {
   if (priority === 'High') return 3;
@@ -83,6 +84,13 @@ function renderTabs() {
   list.querySelectorAll('[data-select]').forEach((btn) => {
     btn.addEventListener('click', () => setActiveTab(btn.getAttribute('data-select')));
   });
+
+  list.querySelectorAll('.subtab-item').forEach((item) => {
+    item.addEventListener('dragover', onTabDragOver);
+    item.addEventListener('dragleave', onTabDragLeave);
+    item.addEventListener('drop', onTabDrop);
+  });
+
   list.querySelectorAll('[data-delete-tab]').forEach((btn) => {
     btn.addEventListener('click', () => deleteSubTab(btn.getAttribute('data-delete-tab')));
   });
@@ -224,6 +232,7 @@ function renderTasks() {
 function onTaskDragStart(event) {
   const row = event.currentTarget;
   dragTaskId = row.getAttribute('data-task-id');
+  dragSourceTabId = activeTabId;
   row.classList.add('dragging');
   event.dataTransfer.effectAllowed = 'move';
 }
@@ -244,7 +253,66 @@ async function onTaskDrop(event) {
 
 function onTaskDragEnd(event) {
   event.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.subtab-item.drag-over').forEach((tab) => {
+    tab.classList.remove('drag-over');
+  });
   dragTaskId = null;
+  dragSourceTabId = null;
+}
+
+function onTabDragOver(event) {
+  if (!dragTaskId) return;
+  event.preventDefault();
+  event.currentTarget.classList.add('drag-over');
+}
+
+function onTabDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+
+async function onTabDrop(event) {
+  event.preventDefault();
+  const targetContainer = event.currentTarget;
+  targetContainer.classList.remove('drag-over');
+
+  if (!dragTaskId || !dragSourceTabId) return;
+  const targetButton = targetContainer.querySelector('[data-select]');
+  if (!targetButton) return;
+
+  const targetTabId = targetButton.getAttribute('data-select');
+  if (!targetTabId || targetTabId === dragSourceTabId) return;
+
+  await moveTaskToTab(dragTaskId, dragSourceTabId, targetTabId);
+}
+
+async function moveTaskToTab(taskId, sourceTabId, targetTabId) {
+  const taskToMove = tasks.find((task) => task.id === taskId);
+  if (!taskToMove) return;
+
+  try {
+    const targetTasksSnapshot = await tasksRef(targetTabId).get();
+    const targetOrders = targetTasksSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return typeof data.order === 'number' ? data.order : 0;
+    });
+    const nextOrder = targetOrders.length ? Math.max(...targetOrders) + 1 : 1;
+
+    const payload = {
+      ...taskToMove,
+      order: nextOrder,
+      movedAt: Date.now(),
+    };
+    delete payload.id;
+
+    const batch = db.batch();
+    batch.set(tasksRef(targetTabId).doc(taskId), payload, { merge: true });
+    batch.delete(tasksRef(sourceTabId).doc(taskId));
+    await batch.commit();
+
+    setStatus('Task moved to selected sub tab.', false);
+  } catch (error) {
+    setStatus('Unable to move task to another sub tab.', true);
+  }
 }
 
 async function reorderTasks(sourceTaskId, targetTaskId) {
