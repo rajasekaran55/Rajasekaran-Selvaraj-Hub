@@ -52,13 +52,27 @@ function parseGvizResponse(text) {
   return JSON.parse(json);
 }
 
+function normalizeGvizValue(v) {
+  // Google Sheets returns date cells as "Date(year,month0,day)" where month is 0-indexed.
+  if (typeof v === 'string') {
+    const m = v.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+    if (m) {
+      const y = m[1];
+      const mo = String(Number(m[2]) + 1).padStart(2, '0');
+      const d = String(m[3]).padStart(2, '0');
+      return `${y}-${mo}-${d}`;
+    }
+  }
+  return v;
+}
+
 function tableRowsToConfig(rows) {
   const config = {};
   rows.forEach((row) => {
     const keyCell = row.c && row.c[0] ? row.c[0].v : null;
     const valueCell = row.c && row.c[1] ? row.c[1].v : null;
     if (!keyCell || valueCell === null || valueCell === undefined) return;
-    config[String(keyCell).trim()] = String(valueCell).trim();
+    config[String(keyCell).trim()] = String(normalizeGvizValue(valueCell)).trim();
   });
   return config;
 }
