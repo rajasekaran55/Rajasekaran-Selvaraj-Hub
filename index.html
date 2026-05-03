@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rajasekaran — Canada PR Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="maple-icon">🍁</div>
+        <div>
+          <h1>Rajasekaran Selvaraj</h1>
+          <p class="header-sub">Canada Permanent Residence Tracker — 2026</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="crs-badge">
+          <span class="crs-label">CRS Score</span>
+          <span class="crs-value" id="crsDisplay">409</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- COUNTDOWN CARDS -->
+    <section class="section">
+      <h2 class="section-title">⏰ Key Deadlines</h2>
+      <div class="grid grid-3">
+        <div class="card deadline-card urgent" id="h1bCard">
+          <div class="deadline-label">H1B Work Permit Expiry</div>
+          <div class="deadline-date">September 30, 2026</div>
+          <div class="countdown" id="h1bCountdown">Loading…</div>
+          <div class="deadline-note">Need new work permit or PR before this date</div>
+        </div>
+        <div class="card deadline-card warning" id="ecaCard">
+          <div class="deadline-label">WES ECA Expiry</div>
+          <div class="deadline-date">December 2026</div>
+          <div class="countdown" id="ecaCountdown">Loading…</div>
+          <div class="deadline-note">Renew if PR not received by then</div>
+        </div>
+        <div class="card deadline-card warning" id="capCard">
+          <div class="deadline-label">5-Year Work Permit Cap</div>
+          <div class="deadline-date">May 15, 2027</div>
+          <div class="countdown" id="capCountdown">Loading…</div>
+          <div class="deadline-note">Must have PR or open work permit</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CRS SCORE DASHBOARD -->
+    <section class="section">
+      <h2 class="section-title">📊 CRS Score Breakdown</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 class="card-title">Current Score</h3>
+          <div class="score-circle-wrapper">
+            <svg class="score-ring" viewBox="0 0 160 160">
+              <circle cx="80" cy="80" r="65" fill="none" stroke="#e5e7eb" stroke-width="14"/>
+              <circle cx="80" cy="80" r="65" fill="none" stroke="#D32F2F" stroke-width="14"
+                stroke-dasharray="408.41"
+                stroke-dashoffset="160"
+                stroke-linecap="round"
+                transform="rotate(-90 80 80)"
+                id="scoreArc"/>
+            </svg>
+            <div class="score-center">
+              <div class="score-number">409</div>
+              <div class="score-label">/ 1200</div>
+            </div>
+          </div>
+          <div class="score-items">
+            <div class="score-row"><span>Age (42 years)</span><span class="pts">~95 pts</span></div>
+            <div class="score-row"><span>Education (Master's)</span><span class="pts">~135 pts</span></div>
+            <div class="score-row"><span>Work Experience (18+ yrs)</span><span class="pts">~80 pts</span></div>
+            <div class="score-row"><span>Language — IELTS (CLB 7-8)</span><span class="pts">~99 pts</span></div>
+            <div class="score-row"><span>Canadian Experience (3+ yrs)</span><span class="pts">~~</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Score Improvement Simulator</h3>
+          <p class="card-sub">Select improvements to simulate your potential CRS score:</p>
+          <div class="simulator">
+            <label class="sim-option" id="simFrench">
+              <input type="checkbox" data-pts="50" onchange="updateSimulator()" />
+              <span class="sim-badge">+50 pts</span>
+              French TEF Canada CLB 7 — <em>MOST URGENT</em>
+            </label>
+            <label class="sim-option" id="simIelts">
+              <input type="checkbox" data-pts="25" onchange="updateSimulator()" />
+              <span class="sim-badge">+25 pts</span>
+              Retake IELTS — target 7.0+ all bands
+            </label>
+            <label class="sim-option" id="simPNP">
+              <input type="checkbox" data-pts="600" onchange="updateSimulator()" />
+              <span class="sim-badge">+600 pts</span>
+              PNP Nomination (BC PNP / SINP)
+            </label>
+          </div>
+          <div class="sim-result">
+            <div class="sim-label">Simulated CRS Score</div>
+            <div class="sim-score" id="simScore">409</div>
+            <div class="sim-draws" id="simDraws"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PR PATHWAYS -->
+    <section class="section">
+      <h2 class="section-title">🛣️ PR Pathways — Priority Order</h2>
+      <div class="grid grid-pathway">
+        <div class="card pathway-card priority-1">
+          <div class="priority-badge">Priority 1</div>
+          <h3>BC PNP Tech Stream</h3>
+          <div class="pathway-meta"><span class="tag tag-green">FASTEST PATH</span></div>
+          <p>Find a BC-based employer → GTS work permit (2 weeks) → BC PNP → +600 CRS → PR</p>
+          <div class="pathway-timeline">Timeline: ~12–15 months from job offer</div>
+          <div class="pathway-status status-active">🔍 Actively Searching</div>
+        </div>
+        <div class="card pathway-card priority-2">
+          <div class="priority-badge">Priority 2</div>
+          <h3>French Express Entry</h3>
+          <div class="pathway-meta"><span class="tag tag-orange">URGENT — START NOW</span></div>
+          <p>Learn French → TEF Canada CLB 7 → +50 CRS → 459 total → Qualifies every French draw</p>
+          <div class="pathway-timeline">Timeline: ~10–12 months study + 6 months PR</div>
+          <div class="pathway-status status-notstarted">❌ Not Started — Start Today!</div>
+        </div>
+        <div class="card pathway-card priority-3">
+          <div class="priority-badge">Priority 3</div>
+          <h3>SINP Saskatchewan</h3>
+          <div class="pathway-meta"><span class="tag tag-yellow">WAITING</span></div>
+          <p>EOI submitted with 66 points. Waiting for draws to resume.</p>
+          <div class="pathway-timeline">No timeline — draws currently paused</div>
+          <div class="pathway-status status-waiting">⏸️ Draws Paused</div>
+        </div>
+        <div class="card pathway-card priority-4">
+          <div class="priority-badge">Priority 4</div>
+          <h3>Express Entry CEC</h3>
+          <div class="pathway-meta"><span class="tag tag-gray">WATCHING</span></div>
+          <p>Need ~100 more CRS points. French +50 and better IELTS +25 may get close.</p>
+          <div class="pathway-timeline">Cutoff may drop to ~500 by Q3/Q4 2026</div>
+          <div class="pathway-status status-watching">👀 Watching IRCC</div>
+        </div>
+        <div class="card pathway-card priority-5">
+          <div class="priority-badge">Priority 5</div>
+          <h3>OINP Ontario</h3>
+          <div class="pathway-meta"><span class="tag tag-gray">PASSIVE</span></div>
+          <p>Toronto employer gives Ontario connection. Watch for NOI (Notification of Interest).</p>
+          <div class="pathway-timeline">No action needed currently</div>
+          <div class="pathway-status status-watching">📬 Watching for NOI</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCUMENTS CHECKLIST -->
+    <section class="section">
+      <h2 class="section-title">📋 Documents Checklist</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 class="card-title">Document Status</h3>
+          <div class="doc-progress-bar">
+            <div class="doc-progress-fill" id="docProgressFill"></div>
+          </div>
+          <div class="doc-progress-text" id="docProgressText">0 of 10 ready</div>
+          <div class="doc-list" id="docList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Document Details</h3>
+          <div class="doc-details">
+            <div class="detail-row">
+              <span class="detail-icon ready">✅</span>
+              <div><strong>IELTS Results</strong><br/>Valid till March 2028</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon ready">✅</span>
+              <div><strong>WES ECA</strong><br/>Valid till December 2026 — Renew if needed</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon ready">✅</span>
+              <div><strong>Medical Exam (IME + UMI)</strong><br/>Valid 12 months from exam</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon ready">✅</span>
+              <div><strong>Express Entry Profile</strong><br/>Active — April 2026</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon progress">🔄</span>
+              <div><strong>FBI PCC</strong><br/>Paid $18 on edo.cjis.gov — Ready to mail FD-258</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon urgent">❗</span>
+              <div><strong>India PCC</strong><br/>NOT Applied — Apply urgently (4–8 weeks processing)</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon urgent">❗</span>
+              <div><strong>Travel History (IMM 5562)</strong><br/>NOT Prepared — last 10 years required</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon urgent">❗</span>
+              <div><strong>Bank Statements</strong><br/>NOT Downloaded — 6 months from online banking</div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon ready">✅</span>
+              <div><strong>Passport</strong><br/>Valid — Indian Passport</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTION ITEMS -->
+    <section class="section">
+      <h2 class="section-title">🎯 Urgent Action Items</h2>
+      <div class="action-list" id="actionList">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- IELTS & LANGUAGE -->
+    <section class="section">
+      <h2 class="section-title">🗣️ Language Proficiency</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 class="card-title">IELTS Scores (March 31, 2026)</h3>
+          <p class="card-sub">Valid till March 2028</p>
+          <div class="ielts-grid">
+            <div class="ielts-item">
+              <div class="ielts-label">Reading</div>
+              <div class="ielts-bar-wrap">
+                <div class="ielts-bar" style="width: 81%"></div>
+              </div>
+              <div class="ielts-scores"><span>6.5</span><span class="clb">CLB 8</span></div>
+            </div>
+            <div class="ielts-item">
+              <div class="ielts-label">Listening</div>
+              <div class="ielts-bar-wrap">
+                <div class="ielts-bar" style="width: 75%"></div>
+              </div>
+              <div class="ielts-scores"><span>6.0</span><span class="clb">CLB 7</span></div>
+            </div>
+            <div class="ielts-item">
+              <div class="ielts-label">Writing</div>
+              <div class="ielts-bar-wrap">
+                <div class="ielts-bar" style="width: 75%"></div>
+              </div>
+              <div class="ielts-scores"><span>6.0</span><span class="clb">CLB 7</span></div>
+            </div>
+            <div class="ielts-item">
+              <div class="ielts-label">Speaking</div>
+              <div class="ielts-bar-wrap">
+                <div class="ielts-bar" style="width: 75%"></div>
+              </div>
+              <div class="ielts-scores"><span>6.0</span><span class="clb">CLB 7</span></div>
+            </div>
+          </div>
+          <div class="ielts-target">
+            <strong>🎯 Target:</strong> 7.0+ in all bands (CLB 9) = +20–30 CRS points
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">French Language — TEF Canada</h3>
+          <div class="french-status">
+            <div class="french-icon">🇫🇷</div>
+            <div class="french-info">
+              <div class="french-current">Status: <strong class="text-red">Not Started</strong></div>
+              <div class="french-target">Target: <strong>CLB 7</strong> (TEF Canada)</div>
+            </div>
+          </div>
+          <div class="french-benefit">
+            <div class="benefit-item">
+              <span class="benefit-label">Current CRS</span>
+              <span class="benefit-value">409</span>
+            </div>
+            <div class="benefit-arrow">+50 →</div>
+            <div class="benefit-item">
+              <span class="benefit-label">After French</span>
+              <span class="benefit-value green">459</span>
+            </div>
+          </div>
+          <div class="french-draws">
+            <p>French draw cutoffs 2026: <strong>393–419</strong></p>
+            <p class="text-green"><strong>459 beats EVERY 2026 French draw!</strong></p>
+          </div>
+          <div class="french-resources">
+            <p><strong>How to learn French:</strong></p>
+            <ul>
+              <li>📱 Duolingo (Free) — Start immediately</li>
+              <li>🏫 <a href="https://www.alliancefrancaise.ca/vancouver" target="_blank">Alliance Française Vancouver</a></li>
+              <li>📝 Book TEF Canada at <a href="https://www.tefcanada.fr" target="_blank">tefcanada.fr</a> (~$400–450 CAD)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PNP STATUS TABLE -->
+    <section class="section">
+      <h2 class="section-title">🏛️ Provincial Nominee Program (PNP) Status</h2>
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="pnp-table">
+            <thead>
+              <tr>
+                <th>Province</th>
+                <th>Stream</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Saskatchewan</strong></td>
+                <td>SINP Express Entry</td>
+                <td><span class="tag tag-yellow">EOI Submitted (66 pts)</span></td>
+                <td>Draws currently PAUSED — watch SINP OASIS daily</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>British Columbia</strong></td>
+                <td>BC PNP Tech Stream</td>
+                <td><span class="tag tag-orange">Not Applied</span></td>
+                <td>⭐ BEST OPTION — Need BC employer job offer first</td>
+              </tr>
+              <tr>
+                <td><strong>Ontario</strong></td>
+                <td>OINP Human Capital</td>
+                <td><span class="tag tag-gray">Watching</span></td>
+                <td>No NOI received — Toronto employer = Ontario connection</td>
+              </tr>
+              <tr>
+                <td><strong>Alberta</strong></td>
+                <td>AAIP Express Entry</td>
+                <td><span class="tag tag-gray">Not Applied</span></td>
+                <td>Need Alberta job offer</td>
+              </tr>
+              <tr>
+                <td><strong>Manitoba</strong></td>
+                <td>MPNP</td>
+                <td><span class="tag tag-red">Not Applicable</span></td>
+                <td>No Manitoba connection</td>
+              </tr>
+              <tr>
+                <td><strong>TR to PR 2026</strong></td>
+                <td>One-time pathway</td>
+                <td><span class="tag tag-red">EXCLUDED</span></td>
+                <td>Vancouver = CMA — excluded from program</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE OVERVIEW -->
+    <section class="section">
+      <h2 class="section-title">👤 Profile Overview</h2>
+      <div class="grid grid-3">
+        <div class="card info-card">
+          <h3 class="card-title">Personal</h3>
+          <div class="info-list">
+            <div class="info-row"><span>Name</span><strong>Rajasekaran Selvaraj</strong></div>
+            <div class="info-row"><span>Age</span><strong>42 years</strong></div>
+            <div class="info-row"><span>Citizenship</span><strong>Indian</strong></div>
+            <div class="info-row"><span>Location</span><strong>Surrey, BC, Canada</strong></div>
+            <div class="info-row"><span>Family</span><strong>Married (Spouse in India)</strong></div>
+            <div class="info-row"><span>In Canada Since</span><strong>May 15, 2022</strong></div>
+          </div>
+        </div>
+        <div class="card info-card">
+          <h3 class="card-title">Work & Education</h3>
+          <div class="info-list">
+            <div class="info-row"><span>Total IT Experience</span><strong>18 Years</strong></div>
+            <div class="info-row"><span>Canada Experience</span><strong>3+ Years (BizOps Engineer)</strong></div>
+            <div class="info-row"><span>USA Experience</span><strong>6 Years (H1B)</strong></div>
+            <div class="info-row"><span>NOC Code</span><strong>21230</strong></div>
+            <div class="info-row"><span>Education</span><strong>MCA (= Canadian Master's)</strong></div>
+            <div class="info-row"><span>WES ECA</span><strong>Master's Equivalent</strong></div>
+          </div>
+        </div>
+        <div class="card info-card">
+          <h3 class="card-title">Express Entry</h3>
+          <div class="info-list">
+            <div class="info-row"><span>Profile Created</span><strong>April 2026</strong></div>
+            <div class="info-row"><span>CRS Score</span><strong>409</strong></div>
+            <div class="info-row"><span>Eligible Streams</span><strong>CEC (Canadian Exp. Class)</strong></div>
+            <div class="info-row"><span>FSW Status</span><strong>Not Met (NOC mismatch)</strong></div>
+            <div class="info-row"><span>Work Permit</span><strong>Valid till Sep 30, 2026</strong></div>
+            <div class="info-row"><span>Province Preference</span><strong>All Provinces</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACTS & RESOURCES -->
+    <section class="section">
+      <h2 class="section-title">📞 Important Contacts & Resources</h2>
+      <div class="grid grid-3">
+        <div class="card resource-card">
+          <h3>Government Portals</h3>
+          <ul class="resource-list">
+            <li><a href="https://www.canada.ca/en/immigration-refugees-citizenship.html" target="_blank">IRCC Portal</a></li>
+            <li><a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html" target="_blank">Express Entry</a></li>
+            <li><a href="https://www.saskatchewan.ca/residents/moving-to-saskatchewan/sinp" target="_blank">SINP OASIS Portal</a></li>
+            <li><a href="https://www.workbc.ca/jobs-careers/find-jobs.aspx" target="_blank">WorkBC.ca</a></li>
+          </ul>
+        </div>
+        <div class="card resource-card">
+          <h3>Documents & Exams</h3>
+          <ul class="resource-list">
+            <li><a href="https://www.edo.cjis.gov" target="_blank">FBI PCC Online (edo.cjis.gov)</a></li>
+            <li><a href="https://www.wes.org" target="_blank">WES — ECA Renewal</a></li>
+            <li><a href="https://www.tefcanada.fr" target="_blank">TEF Canada — French Exam</a></li>
+            <li><a href="https://www.ielts.org" target="_blank">IELTS — Book Retake</a></li>
+          </ul>
+        </div>
+        <div class="card resource-card">
+          <h3>Local Contacts</h3>
+          <ul class="resource-list">
+            <li>Indian Consulate Vancouver<br/><strong>604-682-7788</strong><br/>325 Howe Street, Vancouver</li>
+            <li><a href="https://www.alliancefrancaise.ca/vancouver" target="_blank">Alliance Française Vancouver</a></li>
+            <li>FBI Mail Address:<br/><small>FBI CJIS Division, 1000 Custer Hollow Rd, Clarksburg, WV 26306</small></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section class="section">
+      <h2 class="section-title">📝 My Notes</h2>
+      <div class="card">
+        <textarea class="notes-area" id="notesArea" placeholder="Add your personal notes, updates, or reminders here...&#10;&#10;Examples:&#10;- Applied for India PCC on: [date]&#10;- Mailed FBI FD-258 on: [date]&#10;- French class started: [date]&#10;- BC job interviews: [company/date]"></textarea>
+        <div class="notes-actions">
+          <button class="btn btn-primary" onclick="saveNotes()">💾 Save Notes</button>
+          <span class="save-status" id="saveStatus"></span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Canada PR Tracker — Rajasekaran Selvaraj &nbsp;|&nbsp; Updated May 2026 &nbsp;|&nbsp; For personal use only</p>
+    <p class="footer-sub">Data stored locally in your browser. No server. No account required.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+How to Host for FREE (accessible from anywhere)
+Easiest — Netlify (2 minutes):
+
+Go to netlify.com → sign up free
+Drag and drop the WebApp1 folder onto the Netlify dashboard
+You get a URL like https://amazing-name-123.netlify.app — done!
+GitHub Pages (also free):
+
+Create free account at github.com
+New repository → upload the 3 files (index.html, style.css, app.js)
+Settings → Pages → enable → get https://yourusername.github.io/canada-pr-tracker/
+
+
+****************
+
+My web page created
+https://github.com/rajasekaran55/Rajasekaran-Selvaraj-Hub.git
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
+****************
+
+
+
+
