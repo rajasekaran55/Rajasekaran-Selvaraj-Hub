@@ -374,7 +374,10 @@ function watchTasks(tabId) {
 
   if (!tabId) return;
 
+  const watchingTabId = tabId;
   unsubTasks = tasksRef(tabId).onSnapshot((snapshot) => {
+    // Ignore late snapshots from a previously selected tab.
+    if (activeTabId !== watchingTabId) return;
     tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     renderTasks();
   }, () => {
@@ -385,6 +388,12 @@ function watchTasks(tabId) {
 function setActiveTab(tabId) {
   activeTabId = tabId;
   localStorage.setItem('actionItemsActiveTab', tabId || '');
+
+  const taskFilter = document.getElementById('taskFilter');
+  if (taskFilter) {
+    taskFilter.value = 'all';
+  }
+
   renderTabs();
   watchTasks(activeTabId);
 }
