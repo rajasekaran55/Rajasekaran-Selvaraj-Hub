@@ -840,6 +840,12 @@ body {
   gap: 10px;
 }
 
+.auth-actions {
+  display: flex;
+  justify-content: stretch;
+  margin-top: 12px;
+}
+
 .auth-card .card-sub {
   color: #b5d7ff;
 }
@@ -888,17 +894,20 @@ body {
   font-size: 0.82rem;
 }
 
-.btn-secondary-digital {
-  margin-top: 10px;
+.auth-card .btn-secondary-digital {
+  display: block;
   width: 100%;
+  margin: 0;
+  padding: 11px 18px;
+  text-align: center;
   color: #eaf4ff;
-  background: linear-gradient(135deg, rgba(5, 56, 140, 0.92), rgba(20, 117, 255, 0.78));
+  background: linear-gradient(135deg, #0a3ea8 0%, #0a66ff 55%, #27a7ff 100%);
   border: 1px solid rgba(126, 201, 255, 0.42);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 24px rgba(2, 16, 51, 0.28);
 }
 
-.btn-secondary-digital:hover {
-  background: linear-gradient(135deg, rgba(7, 67, 166, 0.95), rgba(39, 167, 255, 0.82));
+.auth-card .btn-secondary-digital:hover {
+  background: linear-gradient(135deg, #0a4bc6 0%, #1782ff 60%, #49b5ff 100%);
 }
 
 .auth-message {
