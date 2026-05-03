@@ -29,12 +29,16 @@
       <section id="loginSection" class="auth-section">
         <h2>Login</h2>
         <p class="card-sub">Only your approved account can access this site.</p>
+        <div class="auth-info-box">
+          <strong>Why there is no Register option</strong>
+          <p>This site is locked to one approved Firebase email for privacy, so public self-registration is disabled.</p>
+        </div>
         <form id="loginForm" class="auth-form">
           <input id="loginEmail" class="sheet-input" type="email" placeholder="Email" required />
           <input id="loginPassword" class="sheet-input" type="password" placeholder="Password" required />
           <button class="btn btn-primary" type="submit">Login</button>
         </form>
-        <button class="btn" id="resetPasswordBtn" type="button">Reset Password</button>
+        <button class="btn btn-secondary-digital" id="resetPasswordBtn" type="button">Reset Password</button>
       </section>
 
       <p id="authMessage" class="auth-message"></p>
