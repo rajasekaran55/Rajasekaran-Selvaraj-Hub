@@ -1,13 +1,11 @@
 const STORAGE_KEY = 'h1bApplications';
 const EDIT_KEY = 'h1bEditId';
 
-if (window.RajanAuth) {
-  window.RajanAuth.requireAuth();
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => window.RajanAuth.logout());
-  }
-}
+let jobsCache = [];
+let db = null;
+let currentUser = null;
+let unsubscribeJobs = null;
+let cloudMode = false;
 
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('prTheme') || 'light';
@@ -23,20 +21,13 @@ if (themeToggle) {
   });
 }
 
-function getJobs() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-}
-
-function saveJobs(jobs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
-}
-
 function setFormStatus(msg) {
   const status = document.getElementById('formStatus');
+  if (!status) return;
   status.textContent = msg;
   setTimeout(() => {
     status.textContent = '';
-  }, 1800);
+  }, 2200);
 }
 
 function resetForm() {
@@ -52,10 +43,24 @@ function statusClass(status) {
   return 'tag-yellow';
 }
 
+function getJobsRef() {
+  if (!db || !currentUser) return null;
+  return db.collection('users').doc(currentUser.uid).collection('h1bApplications');
+}
+
+function readLocalJobs() {
+  jobsCache = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function writeLocalJobs() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobsCache));
+}
+
 function renderJobs() {
   const body = document.getElementById('jobsBody');
-  const filter = document.getElementById('statusFilter').value;
-  const jobs = getJobs().sort((a, b) => (a.appliedDate < b.appliedDate ? 1 : -1));
+  const filterSelect = document.getElementById('statusFilter');
+  const filter = filterSelect ? filterSelect.value : 'All';
+  const jobs = [...jobsCache].sort((a, b) => (a.appliedDate < b.appliedDate ? 1 : -1));
   body.innerHTML = '';
 
   jobs.forEach((job) => {
@@ -68,7 +73,7 @@ function renderJobs() {
       <td>${job.appliedDate}</td>
       <td><span class="tag ${statusClass(job.status)}">${job.status}</span></td>
       <td>${job.reminderDate || '-'}</td>
-      <td>${job.jobLink ? `<a href="${job.jobLink}" target="_blank">Open</a>` : '-'}</td>
+      <td>${job.jobLink ? `<a href="${job.jobLink}" target="_blank" rel="noopener noreferrer">Open</a>` : '-'}</td>
       <td>
         <button class="btn mini-btn" data-edit="${job.id}" type="button">Edit</button>
         <button class="btn mini-btn danger-btn" data-delete="${job.id}" type="button">Delete</button>
@@ -87,11 +92,10 @@ function renderJobs() {
 
 function renderReminders() {
   const wrap = document.getElementById('remindersWrap');
-  const jobs = getJobs();
   const today = new Date();
   const upcoming = [];
 
-  jobs.forEach((job) => {
+  jobsCache.forEach((job) => {
     if (!job.reminderDate) return;
     const date = new Date(job.reminderDate);
     const diffDays = Math.floor((date - today) / (1000 * 60 * 60 * 24));
@@ -122,16 +126,25 @@ function renderReminders() {
     .join('');
 }
 
-function deleteJob(id) {
-  const jobs = getJobs().filter((job) => job.id !== id);
-  saveJobs(jobs);
+function renderAll() {
   renderJobs();
   renderReminders();
 }
 
+async function deleteJob(id) {
+  if (cloudMode) {
+    const ref = getJobsRef();
+    if (!ref) return;
+    await ref.doc(id).delete();
+  } else {
+    jobsCache = jobsCache.filter((job) => job.id !== id);
+    writeLocalJobs();
+    renderAll();
+  }
+}
+
 function startEdit(id) {
-  const jobs = getJobs();
-  const job = jobs.find((j) => j.id === id);
+  const job = jobsCache.find((j) => j.id === id);
   if (!job) return;
 
   document.getElementById('company').value = job.company;
@@ -145,7 +158,7 @@ function startEdit(id) {
   setFormStatus('Edit mode enabled');
 }
 
-function saveFromForm(event) {
+async function saveFromForm(event) {
   event.preventDefault();
 
   const editId = localStorage.getItem(EDIT_KEY);
@@ -158,6 +171,7 @@ function saveFromForm(event) {
     status: document.getElementById('status').value,
     reminderDate: document.getElementById('reminderDate').value,
     notes: document.getElementById('notes').value.trim(),
+    updatedAt: Date.now(),
   };
 
   if (!payload.company || !payload.role || !payload.appliedDate) {
@@ -165,25 +179,89 @@ function saveFromForm(event) {
     return;
   }
 
-  const jobs = getJobs();
-  const index = jobs.findIndex((j) => j.id === payload.id);
-  if (index >= 0) {
-    jobs[index] = payload;
-    setFormStatus('Application updated');
-  } else {
-    jobs.push(payload);
-    setFormStatus('Application saved');
+  try {
+    if (cloudMode) {
+      const ref = getJobsRef();
+      if (!ref) throw new Error('Cloud database not ready');
+      await ref.doc(payload.id).set(payload, { merge: true });
+      setFormStatus(editId ? 'Application updated in cloud' : 'Application saved in cloud');
+    } else {
+      const index = jobsCache.findIndex((j) => j.id === payload.id);
+      if (index >= 0) {
+        jobsCache[index] = payload;
+        setFormStatus('Application updated locally');
+      } else {
+        jobsCache.push(payload);
+        setFormStatus('Application saved locally');
+      }
+      writeLocalJobs();
+      renderAll();
+    }
+
+    resetForm();
+  } catch (error) {
+    setFormStatus(error.message || 'Save failed');
+  }
+}
+
+function subscribeCloudJobs() {
+  const ref = getJobsRef();
+  if (!ref) return;
+
+  if (unsubscribeJobs) unsubscribeJobs();
+  unsubscribeJobs = ref.onSnapshot((snapshot) => {
+    jobsCache = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        company: data.company || '',
+        role: data.role || '',
+        jobLink: data.jobLink || '',
+        appliedDate: data.appliedDate || '',
+        status: data.status || 'Applied',
+        reminderDate: data.reminderDate || '',
+        notes: data.notes || '',
+        updatedAt: data.updatedAt || 0,
+      };
+    });
+    renderAll();
+  }, () => {
+    setFormStatus('Cloud sync failed, using local data');
+    cloudMode = false;
+    readLocalJobs();
+    renderAll();
+  });
+}
+
+async function initAuthAndData() {
+  if (!window.RajanAuth) {
+    setFormStatus('Auth system missing');
+    return;
   }
 
-  saveJobs(jobs);
-  resetForm();
-  renderJobs();
-  renderReminders();
+  await window.RajanAuth.requireAuth();
+  currentUser = await window.RajanAuth.onAuthReady();
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => window.RajanAuth.logout());
+  }
+
+  if (window.firebase && window.firebase.firestore && currentUser) {
+    db = window.firebase.firestore();
+    cloudMode = true;
+    subscribeCloudJobs();
+    setFormStatus('Cloud sync active');
+  } else {
+    cloudMode = false;
+    readLocalJobs();
+    renderAll();
+    setFormStatus('Using local storage mode');
+  }
 }
 
 document.getElementById('jobForm').addEventListener('submit', saveFromForm);
 document.getElementById('resetForm').addEventListener('click', resetForm);
 document.getElementById('statusFilter').addEventListener('change', renderJobs);
 
-renderJobs();
-renderReminders();
+initAuthAndData();
