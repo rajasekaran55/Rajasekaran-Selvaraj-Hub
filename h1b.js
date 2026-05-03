@@ -1,6 +1,14 @@
 const STORAGE_KEY = 'h1bApplications';
 const EDIT_KEY = 'h1bEditId';
 
+if (window.RajanAuth) {
+  window.RajanAuth.requireAuth();
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => window.RajanAuth.logout());
+  }
+}
+
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('prTheme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);

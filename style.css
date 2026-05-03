@@ -153,6 +153,25 @@ body {
 
 .top-link:hover { background: rgba(255,255,255,0.2); }
 
+.tab-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-link {
+  color: white;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.12);
+  padding: 8px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.tab-link:hover { background: rgba(255,255,255,0.2); }
+.tab-link.active { background: rgba(255,255,255,0.32); }
+
 /* ---- LAYOUT ---- */
 .container {
   max-width: 1400px;
@@ -736,6 +755,57 @@ body {
   color: var(--text-sub);
 }
 
+/* ---- AUTH PAGE ---- */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(circle at top right, #ffd9d9, transparent 40%), var(--bg);
+}
+
+.auth-card {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-title {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+
+.auth-sub {
+  color: var(--text-sub);
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+}
+
+.auth-section {
+  margin-bottom: 16px;
+}
+
+.auth-section h2 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-message {
+  font-size: 0.88rem;
+  font-weight: 600;
+  min-height: 22px;
+}
+
 /* ---- H1B TRACKER ---- */
 .job-form { display: flex; flex-direction: column; gap: 12px; }
 
@@ -817,10 +887,12 @@ a { color: var(--red); }
 @media (max-width: 700px) {
   .header-inner { flex-direction: column; gap: 10px; text-align: center; }
   .header-left { flex-direction: column; }
+  .header-right { flex-direction: column; }
   .container { padding: 16px 12px; gap: 24px; }
   .grid-2, .grid-3, .grid-pathway { grid-template-columns: 1fr; }
   .crs-value { font-size: 1.6rem; }
   .header-left h1 { font-size: 1.2rem; }
   .sheet-sync-row { grid-template-columns: 1fr; }
   .sheet-tab { max-width: none; }
+  .tab-nav { width: 100%; justify-content: center; flex-wrap: wrap; }
 }

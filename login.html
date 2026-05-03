@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Rajan's Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">Rajan's Hub</h1>
+      <p class="auth-sub">Secure access to your PR and H1B tracker.</p>
+
+      <section id="setupSection" class="auth-section">
+        <h2>First-Time Setup</h2>
+        <p class="card-sub">Create your private username and password. Password is stored in encrypted form in your browser.</p>
+        <form id="setupForm" class="auth-form">
+          <input id="setupUsername" class="sheet-input" placeholder="Choose username" required />
+          <input id="setupPassword" class="sheet-input" type="password" placeholder="Choose password" required />
+          <button class="btn btn-primary" type="submit">Create Login</button>
+        </form>
+      </section>
+
+      <section id="loginSection" class="auth-section">
+        <h2>Login</h2>
+        <form id="loginForm" class="auth-form">
+          <input id="loginUsername" class="sheet-input" placeholder="Username" required />
+          <input id="loginPassword" class="sheet-input" type="password" placeholder="Password" required />
+          <button class="btn btn-primary" type="submit">Login</button>
+        </form>
+      </section>
+
+      <p id="authMessage" class="auth-message"></p>
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

@@ -13,6 +13,14 @@ const state = {
 
 const SHEET_KEY = 'prSheetConfig';
 
+if (window.RajanAuth) {
+  window.RajanAuth.requireAuth();
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => window.RajanAuth.logout());
+  }
+}
+
 // ---- THEME TOGGLE ----
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('prTheme') || 'light';

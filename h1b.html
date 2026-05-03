@@ -12,14 +12,18 @@
   <header class="header">
     <div class="header-inner">
       <div class="header-left">
-        <div class="maple-icon">Briefcase</div>
+        <div class="maple-icon">H1B</div>
         <div>
           <h1>H1B Job Tracker</h1>
           <p class="header-sub">Track applications, interviews, and reminders in one place.</p>
         </div>
       </div>
       <div class="header-right">
-        <a class="top-link" href="index.html">Home</a>
+        <nav class="tab-nav" aria-label="Primary">
+          <a class="tab-link" href="index.html">PR Dashboard</a>
+          <a class="tab-link active" href="h1b.html">H1B Tracker</a>
+        </nav>
+        <button class="top-link" id="logoutBtn" type="button">Logout</button>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">Dark</button>
       </div>
     </div>
@@ -126,6 +130,7 @@
     <p class="footer-sub">Stored in your browser. Private to your device.</p>
   </footer>
 
+  <script src="auth.js"></script>
   <script src="h1b.js"></script>
 </body>
 </html>

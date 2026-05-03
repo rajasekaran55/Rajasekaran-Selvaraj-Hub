@@ -21,7 +21,11 @@
         </div>
       </div>
       <div class="header-right">
-        <a class="top-link" href="h1b.html">H1B Tracker</a>
+        <nav class="tab-nav" aria-label="Primary">
+          <a class="tab-link active" href="index.html">PR Dashboard</a>
+          <a class="tab-link" href="h1b.html">H1B Tracker</a>
+        </nav>
+        <button class="top-link" id="logoutBtn" type="button">Logout</button>
         <div class="crs-badge">
           <span class="crs-label">CRS Score</span>
           <span class="crs-value" id="crsDisplay">409</span>
@@ -471,6 +475,7 @@
     <p class="footer-sub">Data stored locally in your browser. No server. No account required.</p>
   </footer>
 
+  <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
