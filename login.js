@@ -9,56 +9,54 @@ function getNextPage() {
 function setMessage(message, isError) {
   const msg = document.getElementById('authMessage');
   msg.textContent = message;
-  msg.style.color = isError ? '#B71C1C' : '#2E7D32';
-}
-
-function toggleSections() {
-  const hasCred = window.RajanAuth.hasCredentials();
-  const setup = document.getElementById('setupSection');
-  const login = document.getElementById('loginSection');
-  setup.style.display = hasCred ? 'none' : 'block';
-  login.style.display = hasCred ? 'block' : 'none';
-}
-
-async function handleSetup(event) {
-  event.preventDefault();
-  const username = document.getElementById('setupUsername').value.trim();
-  const password = document.getElementById('setupPassword').value;
-
-  if (password.length < 8) {
-    setMessage('Use at least 8 characters for password.', true);
-    return;
-  }
-
-  try {
-    await window.RajanAuth.setupCredentials(username, password);
-    setMessage('Credential created. Redirecting...', false);
-    window.location.href = getNextPage();
-  } catch (error) {
-    setMessage(error.message, true);
-  }
+  msg.style.color = isError ? '#ffb3b3' : '#b8ffd1';
 }
 
 async function handleLogin(event) {
   event.preventDefault();
-  const username = document.getElementById('loginUsername').value.trim();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
 
-  const ok = await window.RajanAuth.verifyCredentials(username, password);
-  if (!ok) {
-    setMessage('Invalid username or password.', true);
+  if (!email || !password) {
+    setMessage('Enter email and password.', true);
     return;
   }
 
-  window.RajanAuth.createSession(username);
-  setMessage('Login successful. Redirecting...', false);
-  window.location.href = getNextPage();
+  try {
+    await window.RajanAuth.loginWithEmail(email, password);
+    setMessage('Login successful. Redirecting...', false);
+    window.location.href = getNextPage();
+  } catch (error) {
+    setMessage(error.message || 'Login failed.', true);
+  }
 }
 
-if (window.RajanAuth.isAuthenticated()) {
-  window.location.href = 'index.html';
+async function handleReset() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if (!email) {
+    setMessage('Enter your email first, then click reset.', true);
+    return;
+  }
+
+  try {
+    await window.RajanAuth.sendReset(email);
+    setMessage('Password reset email sent.', false);
+  } catch (error) {
+    setMessage(error.message || 'Reset failed.', true);
+  }
 }
 
-toggleSections();
-document.getElementById('setupForm').addEventListener('submit', handleSetup);
+window.RajanAuth.onAuthReady().then((user) => {
+  if (user && window.RajanAuth.isAuthenticated()) {
+    window.location.href = 'index.html';
+  }
+});
+
+const allowed = window.RajanAuth.allowedEmail();
+if (allowed) {
+  const emailInput = document.getElementById('loginEmail');
+  emailInput.value = allowed;
+}
+
 document.getElementById('loginForm').addEventListener('submit', handleLogin);
+document.getElementById('resetPasswordBtn').addEventListener('click', handleReset);
