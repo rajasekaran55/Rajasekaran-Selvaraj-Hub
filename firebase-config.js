@@ -1,9 +1,9 @@
 window.RajanFirebaseConfig = {
   firebaseConfig: {
-    apiKey: "REPLACE_WITH_API_KEY",
-    authDomain: "REPLACE_WITH_AUTH_DOMAIN",
-    projectId: "REPLACE_WITH_PROJECT_ID",
-    appId: "REPLACE_WITH_APP_ID",
+    apiKey: "AIzaSyC5FBmMijDGHS4VMg5MwHAoBv1X3S4g-CI",
+    authDomain: "rajasekaran-selvaraj-hub.firebaseapp.com",
+    projectId: "rajasekaran-selvaraj-hub",
+    appId: "1:798167577471:web:66f41ac95fccb32ebc204a",
   },
-  allowedEmail: "your-email@example.com",
+  allowedEmail: "rajasekaran.selvarajmca@gmail.com",
 };
