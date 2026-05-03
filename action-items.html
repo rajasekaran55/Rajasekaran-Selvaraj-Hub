@@ -45,8 +45,14 @@
     <section class="section">
       <h2 class="section-title">Tasks</h2>
       <div class="card">
-        <div class="action-top-bar">
+        <div class="action-top-bar action-task-bar">
           <input class="sheet-input" id="newTaskTitle" placeholder="Add action item for selected sub tab" />
+          <input class="sheet-input" id="newTaskDueDate" type="date" />
+          <select class="sheet-input" id="newTaskPriority">
+            <option value="Medium">Medium Priority</option>
+            <option value="High">High Priority</option>
+            <option value="Low">Low Priority</option>
+          </select>
           <button class="btn btn-primary" id="addTaskBtn" type="button">Add Task</button>
           <button class="btn" id="clearCompletedBtn" type="button">Delete Completed</button>
         </div>

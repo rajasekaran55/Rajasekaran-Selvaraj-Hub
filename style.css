@@ -992,6 +992,10 @@ body {
   margin-bottom: 14px;
 }
 
+.action-task-bar {
+  grid-template-columns: 1fr 160px 180px auto auto;
+}
+
 .subtab-list {
   display: flex;
   flex-wrap: wrap;
@@ -1072,9 +1076,59 @@ body {
 
 .task-main {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.task-checkline {
+  display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.9rem;
+}
+
+.task-title {
+  font-weight: 600;
+}
+
+.task-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-left: 26px;
+}
+
+.task-chip {
+  border: 1px solid var(--border);
+  background: var(--gray-light);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.priority-high {
+  background: #ffe8e8;
+  border-color: #ffb3b3;
+  color: #b71c1c;
+}
+
+.priority-medium {
+  background: #e7f5ff;
+  border-color: #99ddff;
+  color: #0a3ea8;
+}
+
+.priority-low {
+  background: #e8f5e9;
+  border-color: #a5d6a7;
+  color: #2e7d32;
+}
+
+.due-chip {
+  background: var(--surface);
 }
 
 .task-main input[type="checkbox"] {
@@ -1111,4 +1165,5 @@ a { color: var(--red); }
   .sheet-tab { max-width: none; }
   .tab-nav { width: 100%; justify-content: center; flex-wrap: wrap; }
   .action-top-bar { grid-template-columns: 1fr; }
+  .action-task-bar { grid-template-columns: 1fr; }
 }

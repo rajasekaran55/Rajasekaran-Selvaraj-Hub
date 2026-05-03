@@ -93,18 +93,36 @@ function renderTasks() {
 
   const sorted = [...tasks].sort((a, b) => {
     if (a.completed === b.completed) {
+      const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+      if (dueA !== dueB) return dueA - dueB;
       return (b.createdAt || 0) - (a.createdAt || 0);
     }
     return a.completed ? 1 : -1;
   });
 
   sorted.forEach((task) => {
+    const dueText = task.dueDate || 'No due date';
+    const priority = task.priority || 'Medium';
+    const priorityClass =
+      priority === 'High'
+        ? 'priority-high'
+        : priority === 'Low'
+          ? 'priority-low'
+          : 'priority-medium';
+
     const row = document.createElement('div');
     row.className = `task-row ${task.completed ? 'done' : ''}`;
     row.innerHTML = `
       <label class="task-main">
-        <input type="checkbox" data-toggle-task="${task.id}" ${task.completed ? 'checked' : ''} />
-        <span>${task.title}</span>
+        <span class="task-checkline">
+          <input type="checkbox" data-toggle-task="${task.id}" ${task.completed ? 'checked' : ''} />
+          <span class="task-title">${task.title}</span>
+        </span>
+        <span class="task-meta">
+          <span class="task-chip ${priorityClass}">${priority}</span>
+          <span class="task-chip due-chip">Due: ${dueText}</span>
+        </span>
       </label>
       <button type="button" class="subtab-delete" data-delete-task="${task.id}" aria-label="Delete task">x</button>
     `;
@@ -187,6 +205,8 @@ async function addTask() {
   }
 
   const input = document.getElementById('newTaskTitle');
+  const dueInput = document.getElementById('newTaskDueDate');
+  const priorityInput = document.getElementById('newTaskPriority');
   const title = input.value.trim();
   if (!title) {
     setStatus('Enter a task title.', true);
@@ -196,10 +216,14 @@ async function addTask() {
   try {
     await tasksRef(activeTabId).add({
       title,
+      dueDate: dueInput.value || '',
+      priority: priorityInput.value || 'Medium',
       completed: false,
       createdAt: Date.now(),
     });
     input.value = '';
+    dueInput.value = '';
+    priorityInput.value = 'Medium';
     setStatus('Task added.', false);
   } catch (error) {
     setStatus('Unable to add task.', true);
