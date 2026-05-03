@@ -58,6 +58,16 @@
         </div>
 
         <div id="selectedTabLabel" class="selected-tab-label">Selected: -</div>
+        <div class="task-filter-row">
+          <label class="field-label" for="taskFilter">Filter</label>
+          <select class="sheet-input task-filter" id="taskFilter">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="overdue">Overdue</option>
+            <option value="high">High Priority</option>
+          </select>
+        </div>
         <div id="taskList" class="task-list"></div>
         <p class="save-status" id="actionStatus"></p>
       </div>

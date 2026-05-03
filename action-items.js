@@ -44,6 +44,15 @@ function tasksRef(tabId) {
   return tabsRef().doc(tabId).collection('tasks');
 }
 
+function isTaskOverdue(task) {
+  if (task.completed || !task.dueDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(task.dueDate);
+  due.setHours(0, 0, 0, 0);
+  return due < today;
+}
+
 function renderTabs() {
   const list = document.getElementById('tabList');
   list.innerHTML = '';
@@ -79,6 +88,8 @@ function renderTabs() {
 
 function renderTasks() {
   const list = document.getElementById('taskList');
+  const taskFilter = document.getElementById('taskFilter');
+  const filterValue = taskFilter ? taskFilter.value : 'all';
   list.innerHTML = '';
 
   if (!activeTabId) {
@@ -91,7 +102,20 @@ function renderTasks() {
     return;
   }
 
-  const sorted = [...tasks].sort((a, b) => {
+  const filtered = tasks.filter((task) => {
+    if (filterValue === 'pending') return !task.completed;
+    if (filterValue === 'completed') return Boolean(task.completed);
+    if (filterValue === 'overdue') return isTaskOverdue(task);
+    if (filterValue === 'high') return (task.priority || 'Medium') === 'High';
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<p class="card-sub">No tasks for this filter.</p>';
+    return;
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
     if (a.completed === b.completed) {
       const dueA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       const dueB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
@@ -103,6 +127,7 @@ function renderTasks() {
 
   sorted.forEach((task) => {
     const dueText = task.dueDate || 'No due date';
+    const overdue = isTaskOverdue(task);
     const priority = task.priority || 'Medium';
     const priorityClass =
       priority === 'High'
@@ -112,7 +137,7 @@ function renderTasks() {
           : 'priority-medium';
 
     const row = document.createElement('div');
-    row.className = `task-row ${task.completed ? 'done' : ''}`;
+    row.className = `task-row ${task.completed ? 'done' : ''} ${overdue ? 'overdue' : ''}`;
     row.innerHTML = `
       <label class="task-main">
         <span class="task-checkline">
@@ -121,7 +146,7 @@ function renderTasks() {
         </span>
         <span class="task-meta">
           <span class="task-chip ${priorityClass}">${priority}</span>
-          <span class="task-chip due-chip">Due: ${dueText}</span>
+          <span class="task-chip due-chip ${overdue ? 'due-chip-overdue' : ''}">Due: ${dueText}</span>
         </span>
       </label>
       <button type="button" class="subtab-delete" data-delete-task="${task.id}" aria-label="Delete task">x</button>
@@ -329,6 +354,7 @@ async function init() {
   document.getElementById('addTabBtn').addEventListener('click', addSubTab);
   document.getElementById('addTaskBtn').addEventListener('click', addTask);
   document.getElementById('clearCompletedBtn').addEventListener('click', clearCompleted);
+  document.getElementById('taskFilter').addEventListener('change', renderTasks);
 
   document.getElementById('newTabName').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
