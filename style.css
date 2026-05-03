@@ -64,6 +64,11 @@ body {
   box-shadow: 0 4px 20px rgba(10,102,255,0.35);
 }
 
+.auth-header {
+  position: relative;
+  top: 0;
+}
+
 .header-inner {
   max-width: 1400px;
   margin: 0 auto;
@@ -757,7 +762,7 @@ body {
 
 /* ---- AUTH PAGE ---- */
 .auth-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 88px);
   display: flex;
   align-items: center;
   justify-content: center;
