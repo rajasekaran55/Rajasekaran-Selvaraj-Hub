@@ -52,17 +52,32 @@ function parseGvizResponse(text) {
   return JSON.parse(json);
 }
 
-function normalizeGvizValue(v) {
-  // Google Sheets returns date cells as "Date(year,month0,day)" where month is 0-indexed.
+function normalizeGvizCell(cell) {
+  if (!cell) return null;
+  const v = cell.v;
+  const f = cell.f; // formatted string e.g. "9/30/2026"
+
+  // gviz returns date cells as "Date(year,month0,day)" string in v
   if (typeof v === 'string') {
-    const m = v.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+    const m = v.match(/Date\((\d+),(\d+),(\d+)\)/);
     if (m) {
-      const y = m[1];
       const mo = String(Number(m[2]) + 1).padStart(2, '0');
       const d = String(m[3]).padStart(2, '0');
-      return `${y}-${mo}-${d}`;
+      return `${m[1]}-${mo}-${d}`;
     }
   }
+
+  // Some gviz responses give v as null for dates but populate f as "M/D/YYYY"
+  if ((v === null || v === undefined) && typeof f === 'string') {
+    const parts = f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (parts) {
+      const mo = parts[1].padStart(2, '0');
+      const d = parts[2].padStart(2, '0');
+      return `${parts[3]}-${mo}-${d}`;
+    }
+    return f;
+  }
+
   return v;
 }
 
@@ -70,9 +85,9 @@ function tableRowsToConfig(rows) {
   const config = {};
   rows.forEach((row) => {
     const keyCell = row.c && row.c[0] ? row.c[0].v : null;
-    const valueCell = row.c && row.c[1] ? row.c[1].v : null;
+    const valueCell = row.c && row.c[1] ? normalizeGvizCell(row.c[1]) : null;
     if (!keyCell || valueCell === null || valueCell === undefined) return;
-    config[String(keyCell).trim()] = String(normalizeGvizValue(valueCell)).trim();
+    config[String(keyCell).trim()] = String(valueCell).trim();
   });
   return config;
 }
