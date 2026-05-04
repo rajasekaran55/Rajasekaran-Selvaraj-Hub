@@ -3,7 +3,226 @@
 // Key Points + Custom Links stored in Firestore (with localStorage fallback)
 // =============================================
 
-const POINTS_LS_KEY = 'dailyHubPoints';
+// ---- PROFILE DEFAULTS (your personal immigration profile) ----
+const MY_PROFILE = {
+  crs: 409,
+  h1bExpiry: '2026-09-30',
+  ecaExpiry: '2026-12-31',
+  capExpiry: '2027-05-15',
+};
+
+// ---- SMART BRIEF ----
+const IRCC_DRAWS_URL =
+  'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
+
+function daysUntil(dateStr) {
+  const target = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+}
+
+function parseIrccDate(str) {
+  // IRCC returns dates like "May 1, 2026" — convert to YYYY-MM-DD
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toISOString().split('T')[0];
+}
+
+async function fetchLatestDraw() {
+  const res = await fetch(IRCC_DRAWS_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const rounds = data.rounds || [];
+  if (!rounds.length) throw new Error('No draw data returned');
+  return rounds[0]; // latest draw is first
+}
+
+function buildSmartAlerts(cutoff, profile) {
+  const alerts = [];
+  const gap = cutoff - profile.crs;
+  const h1bDays = daysUntil(profile.h1bExpiry);
+  const ecaDays = daysUntil(profile.ecaExpiry);
+  const capDays = daysUntil(profile.capExpiry);
+
+  // --- CRS gap vs latest cutoff ---
+  if (gap <= 0) {
+    alerts.push({
+      type: 'success', icon: '🎉',
+      title: `You qualify for this draw! Your CRS (${profile.crs}) ≥ cutoff (${cutoff})`,
+      msg: 'Your score meets or exceeds the latest draw cutoff. Make sure your profile is active in the Express Entry pool.',
+    });
+  } else if (gap <= 20) {
+    alerts.push({
+      type: 'warning', icon: '🔥',
+      title: `Only ${gap} points away from the latest cutoff!`,
+      msg: `Latest cutoff: ${cutoff} | Your CRS: ${profile.crs}. You are extremely close. A new job offer, PNP nomination, or French language score could push you over.`,
+    });
+  } else if (gap <= 50) {
+    alerts.push({
+      type: 'warning', icon: '⚡',
+      title: `${gap} points to close — French language boost recommended`,
+      msg: `Latest cutoff: ${cutoff} | Your CRS: ${profile.crs}. Achieving French CLB 9+ can add up to 50 CRS points. Consider NCLC prep immediately.`,
+    });
+  } else {
+    alerts.push({
+      type: 'info', icon: '📊',
+      title: `${gap}-point gap to latest cutoff (${cutoff})`,
+      msg: `Your CRS: ${profile.crs}. Priority boosts: (1) French language CLB 9+ = +50 pts, (2) Provincial Nomination (PNP) = +600 pts, (3) Job offer = +50–200 pts.`,
+    });
+  }
+
+  // --- H1B expiry ---
+  if (h1bDays <= 0) {
+    alerts.push({
+      type: 'danger', icon: '🚨',
+      title: 'H1B has expired!',
+      msg: `Your H1B expired on ${profile.h1bExpiry}. Consult your immigration attorney immediately.`,
+    });
+  } else if (h1bDays <= 60) {
+    alerts.push({
+      type: 'danger', icon: '🚨',
+      title: `H1B expires in ${h1bDays} days — urgent action needed`,
+      msg: `Expiry: ${profile.h1bExpiry}. File H1B extension or ensure your Canada PR process is on track before this deadline.`,
+    });
+  } else if (h1bDays <= 120) {
+    alerts.push({
+      type: 'warning', icon: '⚠️',
+      title: `H1B expires in ${h1bDays} days`,
+      msg: `Expiry: ${profile.h1bExpiry}. Start your H1B extension process now — filing takes 2–3 months. Also track your EE profile as a backup plan.`,
+    });
+  }
+
+  // --- ECA expiry ---
+  if (ecaDays <= 90) {
+    alerts.push({
+      type: 'warning', icon: '📋',
+      title: `ECA expires in ${ecaDays} days`,
+      msg: `Expiry: ${profile.ecaExpiry}. Your Educational Credential Assessment is required for Express Entry. Renew it before it expires or your EE profile becomes invalid.`,
+    });
+  } else if (ecaDays <= 180) {
+    alerts.push({
+      type: 'info', icon: '📋',
+      title: `ECA expires in ${ecaDays} days — plan renewal`,
+      msg: `Expiry: ${profile.ecaExpiry}. Begin the renewal process ~90 days before expiry to avoid any gap in your Express Entry eligibility.`,
+    });
+  }
+
+  // --- Work permit cap ---
+  if (capDays > 0 && capDays <= 180) {
+    alerts.push({
+      type: 'info', icon: '🗓️',
+      title: `Work permit cap deadline in ${capDays} days`,
+      msg: `Cap date: ${profile.capExpiry}. Ensure all documentation is in order well before this date.`,
+    });
+  }
+
+  return alerts;
+}
+
+function renderSmartBrief(draw, profile) {
+  const container = document.getElementById('smartBriefContainer');
+  if (!container) return;
+
+  const cutoff = Number(draw.drawCRS);
+  const gap = cutoff - profile.crs;
+  const drawDateISO = parseIrccDate(draw.drawDateFull || draw.drawDate);
+
+  // Predict next draw (~14 days after last)
+  const lastDrawDate = new Date(drawDateISO);
+  const expectedNext = new Date(lastDrawDate);
+  expectedNext.setDate(expectedNext.getDate() + 14);
+  const nextDays = daysUntil(expectedNext.toISOString().split('T')[0]);
+  const nextDaysLabel = nextDays > 0
+    ? `📅 Next draw expected in ~${nextDays} day${nextDays !== 1 ? 's' : ''} (draws are ~every 2 weeks)`
+    : '📅 A new draw may be due any day now';
+
+  const gapClass = gap <= 0 ? 'stat-green' : gap <= 30 ? 'stat-orange' : 'stat-red';
+  const gapLabel = gap <= 0 ? `+${Math.abs(gap)} above` : `${gap} below`;
+
+  const alerts = buildSmartAlerts(cutoff, profile);
+  const alertsHtml = alerts.map((a) => `
+    <div class="smart-alert smart-alert-${a.type}">
+      <span class="smart-alert-icon">${a.icon}</span>
+      <div>
+        <strong>${escapeHtml(a.title)}</strong>
+        <p>${escapeHtml(a.msg)}</p>
+      </div>
+    </div>
+  `).join('');
+
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+        <h3 class="resource-category-title" style="margin-bottom:0">📊 Latest Express Entry Draw — #${escapeHtml(String(draw.drawNumber))}</h3>
+        <button class="btn" id="smartRefreshBtn" type="button" style="font-size:0.78rem;padding:5px 12px">🔄 Refresh</button>
+      </div>
+      <div class="smart-draw-grid">
+        <div class="smart-stat">
+          <span class="smart-stat-label">Draw Date</span>
+          <span class="smart-stat-val">${escapeHtml(draw.drawDate)}</span>
+        </div>
+        <div class="smart-stat">
+          <span class="smart-stat-label">CRS Cutoff</span>
+          <span class="smart-stat-val">${cutoff}</span>
+        </div>
+        <div class="smart-stat">
+          <span class="smart-stat-label">Invitations</span>
+          <span class="smart-stat-val">${Number(draw.drawSize).toLocaleString()}</span>
+        </div>
+        <div class="smart-stat">
+          <span class="smart-stat-label">Program</span>
+          <span class="smart-stat-val" style="font-size:0.85rem">${escapeHtml(draw.drawName)}</span>
+        </div>
+        <div class="smart-stat">
+          <span class="smart-stat-label">Your CRS</span>
+          <span class="smart-stat-val ${gapClass}">${profile.crs}</span>
+        </div>
+        <div class="smart-stat">
+          <span class="smart-stat-label">Your Gap</span>
+          <span class="smart-stat-val ${gapClass}">${gapLabel}</span>
+        </div>
+      </div>
+      <p class="card-sub" style="margin-top:0.75rem">${nextDaysLabel}</p>
+    </div>
+    <div class="smart-alerts">${alertsHtml}</div>
+    <div class="smart-brief-footer">
+      <span class="smart-fetch-time">Last updated: ${now} · Data source: IRCC Canada</span>
+    </div>
+  `;
+
+  const refreshBtn = document.getElementById('smartRefreshBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadSmartBrief);
+  }
+}
+
+async function loadSmartBrief() {
+  const container = document.getElementById('smartBriefContainer');
+  if (!container) return;
+  container.innerHTML = `<div class="card"><p class="card-sub">⏳ Loading latest Express Entry data from IRCC...</p></div>`;
+  try {
+    const draw = await fetchLatestDraw();
+    renderSmartBrief(draw, MY_PROFILE);
+  } catch (err) {
+    container.innerHTML = `
+      <div class="card">
+        <div class="smart-error">
+          ⚠️ Could not load live IRCC data. Check your internet connection or try refreshing.
+          <br><br>
+          <button class="btn" id="smartRetryBtn" type="button">🔄 Retry</button>
+          <br><br>
+          <small>You can also check directly: <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations.html" target="_blank" rel="noopener noreferrer">IRCC Draw Results →</a></small>
+        </div>
+      </div>`;
+    const retryBtn = document.getElementById('smartRetryBtn');
+    if (retryBtn) retryBtn.addEventListener('click', loadSmartBrief);
+  }
+}
+
+
 const LINKS_LS_KEY = 'dailyHubLinks';
 
 let db = null;
@@ -243,6 +462,7 @@ async function init() {
   });
 
   await Promise.all([loadPoints(), loadCustomLinks()]);
+  loadSmartBrief();
 }
 
 init();

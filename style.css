@@ -1365,3 +1365,126 @@ a { color: var(--red); }
   flex: 1;
   line-height: 1.4;
 }
+
+/* ---- SMART BRIEF ---- */
+.smart-draw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.smart-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.smart-stat-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-sub);
+}
+
+.smart-stat-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-green { color: #2E7D32; }
+.stat-orange { color: #E65100; }
+.stat-red { color: #B71C1C; }
+
+[data-theme="dark"] .stat-green { color: #66BB6A; }
+[data-theme="dark"] .stat-orange { color: #FFA726; }
+[data-theme="dark"] .stat-red { color: #EF9A9A; }
+
+.smart-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.smart-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid transparent;
+  font-size: 0.88rem;
+}
+
+.smart-alert p {
+  margin-top: 2px;
+  color: var(--text-sub);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.smart-alert-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.smart-alert-success {
+  background: #E8F5E9;
+  border-left-color: #2E7D32;
+}
+.smart-alert-warning {
+  background: #FFF8E1;
+  border-left-color: #F9A825;
+}
+.smart-alert-danger {
+  background: #FFEBEE;
+  border-left-color: #B71C1C;
+}
+.smart-alert-info {
+  background: var(--orange-light);
+  border-left-color: var(--orange);
+}
+
+[data-theme="dark"] .smart-alert-success {
+  background: rgba(46,125,50,0.18);
+  border-left-color: #66BB6A;
+}
+[data-theme="dark"] .smart-alert-warning {
+  background: rgba(249,168,37,0.15);
+  border-left-color: #FFA726;
+}
+[data-theme="dark"] .smart-alert-danger {
+  background: rgba(183,28,28,0.18);
+  border-left-color: #EF9A9A;
+}
+
+.smart-brief-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.smart-fetch-time {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+
+.smart-error {
+  padding: 12px 16px;
+  background: var(--gray-light);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+}
